@@ -72,7 +72,6 @@ class SamzaMetricsTask(BaseTask):
                     
     def rico_metric(self, data, metric_name, metric_vals, collector):
         for (metric_attr, metric_val) in metric_vals.iteritems():
-            print(metric_attr)
             if metric_attr == "type" or metric_attr == "rateUnit":
                 continue
             header = data["header"]
