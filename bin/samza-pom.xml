@@ -86,24 +86,6 @@
             <artifactId>rico-cmd-line-runner</artifactId>
             <version>${rico.version}</version>
         </dependency>
-        <dependency>
-          <groupId>org.apache.avro</groupId>
-          <artifactId>avro-compiler</artifactId>
-          <version>${avro.version}</version>
-          <scope>compile</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.avro</groupId>
-          <artifactId>avro-tools</artifactId>
-          <version>${avro.version}</version>
-          <scope>provided</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.avro</groupId>
-          <artifactId>avro-maven-plugin</artifactId>
-          <version>${avro.version}</version>
-          <scope>provided</scope>
-        </dependency>
         <!-- 
           rhoover - ran into conflict with Avro + Samza versions of jackson-core-asl
         -->
@@ -116,30 +98,6 @@
     <build>
         <directory>${buildDir}</directory>
         <plugins>
-            <plugin>
-              <groupId>org.apache.avro</groupId>
-              <artifactId>avro-maven-plugin</artifactId>
-              <version>${avro.version}</version>
-              <configuration>
-                <sourceDirectory>${project.basedir}/../config/schema/avro</sourceDirectory>
-                <!--
-                  rhoover: this makes the Avro compiler use String
-                  instead of CharSequence for string types.  It's important
-                  when using hash maps as .equals() and .hashCode() methods
-                  are not defined for CharSequence.
-                  https://issues.apache.org/jira/browse/AVRO-803
-                -->
-                <stringType>String</stringType>
-              </configuration>
-              <executions>
-                <execution>
-                  <phase>generate-sources</phase>
-                  <goals>
-                    <goal>schema</goal>
-                  </goals>
-                </execution>
-              </executions>
-            </plugin>
             <!-- Maven Shade Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
