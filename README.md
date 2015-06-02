@@ -39,3 +39,6 @@ Samza Metrics to StatsD
 		grid stop yarn
 		grid stop all
 
+Building Package
+---
+		rico package metrics
