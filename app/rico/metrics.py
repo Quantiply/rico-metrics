@@ -129,7 +129,8 @@ class DruidMetricsTask(BaseTask):
     def handle_msg(self, data, collector, coord):
         try:
             msg = data.message
-            if msg["metric"].startswith("events") or msg["metric"].startswith("rows"):
+            PREFIXES = ['events', 'rows', 'failed', 'persist']
+            if (any([msg["metric"].startswith(prefix) for prefix in PREFIXES])):
                 data = {}
                 data["source"] = "druid"
                 data["metric"] = msg["metric"]
