@@ -1,0 +1,151 @@
+web:
+  common:
+    rico:
+      jython.entrypoint: et.web.EchoTask
+#      jython.entrypoint: et.web.ParseWebLog
+      streams.out: echo.out
+  samza:
+    job:
+        factory.class: org.apache.samza.job.local.ThreadJobFactory
+        name: web
+
+    task:
+        class: com.quantiply.samza.JythonTask
+        inputs: kafka.echo.in
+        checkpoint.factory: org.apache.samza.checkpoint.kafka.KafkaCheckpointManagerFactory
+        checkpoint.system: kafka
+        checkpoint.replication.factor: "1"
+        consumer.batch.size: "1000"
+
+    metrics:
+        reporters: "snapshot,jmx"
+        reporter.snapshot.class: org.apache.samza.metrics.reporter.MetricsSnapshotReporterFactory
+        reporter.snapshot.stream: kafka.sys.samza_metrics
+        reporter.jmx.class: org.apache.samza.metrics.reporter.JmxReporterFactory
+
+    serializers:
+        registry.byte.class: org.apache.samza.serializers.ByteSerdeFactory
+        registry.json.class: org.apache.samza.serializers.JsonSerdeFactory
+        registry.metrics.class: org.apache.samza.serializers.MetricsSnapshotSerdeFactory
+
+    systems.kafka:
+        samza.factory: org.apache.samza.system.kafka.KafkaSystemFactory
+        samza.key.serde: byte
+        samza.msg.serde: json
+        streams.sys.samza_metrics.samza.msg.serde: metrics
+        #rhoover: when checkpoint is not present, read oldest data possible
+        samza.offset.default: oldest
+        consumer.zookeeper.connect: "localhost:2181/"
+        producer.bootstrap.servers: "localhost:9092"
+        producer.compression.type: lz4
+        producer.batch.size: "262144"
+        producer.linger.ms: "5"
+
+web-avro:
+  common:
+    rico:
+      jython.entrypoint: et.web.ParseWebLog
+      streams.out: echo-avro.out
+      string-serde.avro.input.type: com.quantiply.rico.test.MumboJumbo
+  local:
+      rico:
+        string-serde.class: com.quantiply.samza.serde.AvroStringSerde
+  samza:
+    confluent.schema.registry.url: "http://localhost:9081"
+    job:
+        factory.class: org.apache.samza.job.local.ThreadJobFactory
+        name: web
+
+    task:
+        class: com.quantiply.samza.JythonTask
+        inputs: kafka.echo-avro.in
+        checkpoint.factory: org.apache.samza.checkpoint.kafka.KafkaCheckpointManagerFactory
+        checkpoint.system: kafka
+        checkpoint.replication.factor: "1"
+        consumer.batch.size: "1000"
+
+    metrics:
+        reporters: "snapshot,jmx"
+        reporter.snapshot.class: org.apache.samza.metrics.reporter.MetricsSnapshotReporterFactory
+        reporter.snapshot.stream: kafka.sys.samza_metrics
+        reporter.jmx.class: org.apache.samza.metrics.reporter.JmxReporterFactory
+
+    serializers:
+        registry.byte.class: org.apache.samza.serializers.ByteSerdeFactory
+        registry.avro.class: com.quantiply.samza.serde.AvroSerdeFactory
+        registry.json.class: org.apache.samza.serializers.JsonSerdeFactory
+        registry.metrics.class: org.apache.samza.serializers.MetricsSnapshotSerdeFactory
+
+    systems.kafka:
+        samza.factory: org.apache.samza.system.kafka.KafkaSystemFactory
+        samza.key.serde: byte
+        samza.msg.serde: avro
+        streams.sys.samza_metrics.samza.msg.serde: metrics
+        #rhoover: when checkpoint is not present, read oldest data possible
+        samza.offset.default: oldest
+        consumer.zookeeper.connect: "localhost:2181/"
+        producer.bootstrap.servers: "localhost:9092"
+        producer.compression.type: lz4
+        producer.batch.size: "262144"
+        producer.linger.ms: "5"
+
+samza-to-statsd:
+  common:
+    rico:
+      jython.entrypoint: rico.metrics.SamzaMetricsTask
+      streams.out: sys.statsd
+  samza:
+    job.name: samza-to-statsd
+    task:
+      class: com.quantiply.samza.JythonTask
+      inputs: kafka.sys.samza_metrics
+
+druid-to-statsd:
+  common:
+    rico:
+      jython.entrypoint: rico.metrics.DruidMetricsTask
+      streams.out: sys.statsd
+  samza:
+    job.name: druid-to-statsd
+    task:
+      class: com.quantiply.samza.JythonTask
+      inputs: kafka.sys.samza_metrics
+
+statsd-push:
+  common:
+    rico:
+      jython.entrypoint: rico.metrics.StatsDTask
+      drop.secs: 60
+      statsd:
+        prefix: RTOI.sit
+        host: localhost
+        port: 8125
+  
+  samza:
+    job.name: statsd-push
+    job.id: 2
+    task:
+      class: com.quantiply.samza.JythonTask
+      inputs: kafka.sys.statsd
+
+test:
+  common:
+    rico:
+      jython.entrypoint: foo.dummy.TestProcessor
+      streams.out: kafka.test-output
+  samza:
+    job.name: test
+    task:
+      inputs: kafka.test-input
+      error: kafka.test-error
+    metrics.reporter.snapshot.stream: kafka.samza-metrics
+    systems.kafka.consumer.auto.offset.reset: smallest
+    systems.kafka.producer.batch.num.messages: "10"
+    stores.bar:
+      factory: org.apache.samza.storage.kv.RocksDbKeyValueStorageEngineFactory
+      changelog: kafka.test-bar.changelog
+      key.serde: str
+      msg.serde: str
+      changelog.replication.factor: 1
+      write.batch.size: 0
+      object.cache.size: 0

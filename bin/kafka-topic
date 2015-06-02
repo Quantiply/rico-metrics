@@ -1,0 +1,126 @@
+#!/usr/bin/env python
+
+"""Kafka Topic wrangler.
+
+Usage:
+  kafka-topic (create | delete | update | describe) [options] <name>
+  kafka-topic (create-all | describe-all) [options]
+  kafka-topic list [options]
+  kafka-topic diff [options]
+
+Options:
+  -z host:port    Zookeeper host:port (Default: localhost:2181)
+  -c config       topic.yml file (Default: $APP_HOME/config/topics.yml)
+  -h, --help      Show this screen.
+  --version       Show version.
+  -d              Show debug info.
+"""
+
+from docopt import docopt
+import subprocess
+import os
+from os import environ as env
+import yaml
+import collections
+from texttable import Texttable
+
+def get_app_home():
+   try:
+      return env['APP_HOME']
+   except:
+      return None
+
+def get_kafka_home():
+   try:
+      return env['KAFKA_HOME']
+   except:
+      return None
+   
+def load_cfg(args):
+   config_file = "%s/config/topics.yml" % (get_app_home(),)
+   if args['-c'] is not None:
+      config_file = args['-c']
+
+   print "Reading config from %s \n" % (config_file, )
+   
+   config = yaml.load(open(config_file, 'r'))
+   topics = {}
+   for topic in config.iteritems():
+      name = topic[0]
+      desc = topic[1]['description']
+
+      for instance in topic[1]['instances']:
+         i_name = instance
+         i_desc = desc
+         
+         if isinstance(instance, collections.MutableMapping):
+            i_name =  instance.keys()[0]
+            if instance[i_name].has_key('description'):
+               i_desc = "%s \n(%s)" % (desc, instance[i_name]['description'])
+            else:
+               i_desc = desc
+
+         n = name + "." + i_name
+         topics[n] = {i[0]:i[1] for i in topic[1].iteritems() if not i[0] == "instances"}
+         if isinstance(instance, collections.MutableMapping):
+            topics[n].update(instance[i_name])
+         topics[n]['description'] = i_desc
+
+   return topics
+
+def get_zk(args):
+   zk = 'localhost:2181'
+   if args['-z'] is not None:
+      zk = args['-z']
+   return zk
+
+def run_command(cmd):  
+  print subprocess.call(cmd, shell=True)
+
+
+def create(args):
+   config = read_cfg(args)
+   name = args['<name>']
+   if not config.has_key(name):
+      print "Topic %s is not available in the config file."
+   else:
+      create_topic(name, config[name]['partitions'], config[name]['replicas'], get_zk(args))
+
+def create_topic(topic, partitions, replicas, zk):
+   cmd = "%s/bin/kafka-topics --zookeeper %s --topic %s --create --partitions %s --replication-factor %s" \
+         % (get_kafka_home(), zk, topic, partitions, replicas)
+   print "Running : " , cmd
+
+   run_command(cmd)
+   
+def create_all(args):
+   for topic in load_cfg(args).iteritems():
+      create_topic(topic[0], topic[1]['partitions'], topic[1]['replicas'], get_zk(args))
+
+def list(args):
+   config = load_cfg(args)
+
+   t = [["Topic", "Description","Properties"]]
+   for x in sorted(config):
+      props = " , ".join([ i[0] + "=" + str(i[1]) for i in config[x].iteritems() if not i[0] == "description" ])
+      t.append([x, config[x]['description'], props ])
+   table = Texttable(max_width=200)
+   table.add_rows(t)
+   print(table.draw())
+   print ""      
+
+if __name__ == '__main__':
+   args = docopt(__doc__, version='0.0.1')
+   print ""
+   
+   if args['-d']:
+      print args
+
+   if get_kafka_home() is None:
+      print "KAFKA_HOME is not defined."
+   elif get_app_home() is None and not args['-c']:
+      print "APP_HOME is not defined. You need to define APP_HOME or provide a config file."
+   elif args['create-all']:
+      create_all(args)
+   elif args['list']:
+      list(args)

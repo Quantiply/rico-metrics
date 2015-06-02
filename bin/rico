@@ -1,0 +1,283 @@
+#!/usr/bin/env python
+#
+# Copyright 2014-2015 Quantiply Corporation. All rights reserved.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+"""Rico superpowers.
+
+Usage:
+  rico local [-d] <name> [--env=<env>] [--full]
+  rico samza <name> [--env=<env>]
+  rico yarn <name> [--env=<env>] [--http=<http_url>]
+  rico build jar 
+  rico package <name>
+  rico install-deps
+Options:
+  -h --help     Show this screen.
+  --version     Show version.
+  -d            Show debug info.
+"""
+
+from docopt import docopt
+import subprocess
+import os
+from os import environ as env
+import yaml
+import collections
+
+def get_default_cfg(runner):
+  default_file = "%s/config/default.yml" % (get_app_home(), )
+  default = yaml.load(open(default_file, "r"))
+  return flatten(default[runner])
+
+def is_processor_valid(processor):
+  jobs_file = "%s/config/jobs.yml" % (get_app_home(), )
+  jobs = yaml.load(open(jobs_file, "r"))
+  return jobs.has_key(processor)
+
+def get_processor_cfg(runner, processor):
+  jobs_file = "%s/config/jobs.yml" % (get_app_home(), )
+  jobs = yaml.load(open(jobs_file, "r"))
+  cfg = {}
+  if jobs[processor].has_key("common"):
+    cfg = flatten(jobs[processor]["common"])
+  if jobs[processor].has_key(runner):
+    cfg.update(flatten(jobs[processor][runner]))
+  return cfg
+  
+def get_env_cfg(runner, env):
+  env_file = "%s/config/%s.yml" % (get_app_home(), env)
+  env = yaml.load(open(env_file, "r"))
+  if env.has_key(runner):
+    return flatten(env[runner])
+  else:
+    return {}
+  
+def cfg_to_file(runner_config, build_file):
+  # Replace $app_home with full path
+  runner_config = {x[0]: rewrite_vars(str(x[1])) for x in runner_config.iteritems()}
+  # Create a properties file for the processor.
+  props = ["%s=%s" % (str(k[0]),str(k[1])) for k in runner_config.iteritems()]
+  if not os.path.exists(os.path.dirname(build_file)):
+        os.makedirs(os.path.dirname(build_file))
+  with open(build_file, "w") as f:
+    f.write("\n".join(sorted(props)))
+
+  return build_file
+
+def rewrite_vars(val):
+  tmp = val.replace("$app_home", get_app_home())
+  return tmp
+
+# http://stackoverflow.com/a/6027615
+def flatten(d, parent_key='', sep='.'):
+  items = []
+  for k, v in d.items():
+    new_key = parent_key + sep + k if parent_key else k
+    if isinstance(v, collections.MutableMapping):
+      items.extend(flatten(v, new_key, sep=sep).items())
+    else:
+      items.append((new_key, v))
+  return dict(items)
+  
+def get_app_home():
+  try:
+    return env['APP_HOME']
+  except:
+    return None
+
+def run_command(cmd):
+  # print "Running : ", cmd
+  # print " "
+  output = subprocess.call(cmd, shell=True)
+  if not output == 0:
+    raise RuntimeError(output)
+  # print " " 
+    
+def install_deps(args):
+  cmd = "pip install --target %s/lib/vendor/ -r jython-requirements.txt" % (get_app_home(), )
+  run_command(cmd)
+
+def get_common_cfg(runner, processor):
+  cfg = get_default_cfg(runner)
+  cfg.update(get_processor_cfg(runner,processor))
+  
+
+def local(args):
+  processor = args["<name>"]
+  runner = "local"
+  env = "dev"
+  if args["--env"]:
+    env = args["--env"]
+  
+  # Get and merge props
+
+  if not is_processor_valid(processor):
+    print "%s not found in jobs.yml" % (processor, )
+    return
+
+  cfg = get_default_cfg(runner)
+  cfg.update(get_processor_cfg(runner,processor))
+  cfg.update(get_env_cfg(runner, env))
+
+  # Write config file.
+  build_file = "%s/build/%s/%s.properties" % (get_app_home(), runner, processor)
+  cfg_to_file(cfg, build_file)
+  
+  # Run the command
+  output = 1 # Message only
+  if args["--full"]:
+    ouput = 0
+  cmd = "java -Dlog4j.configuration=file:///$APP_HOME/config/log4j.properties "
+  cmd += "-jar $APP_HOME/lib/samza-*.jar "
+  cmd += build_file
+  cmd += " " + str(output)
+
+  run_command(cmd)
+
+def samza(args):
+  processor = args["<name>"]
+  runner = "samza"
+  env = "dev"
+  if args["--env"]:
+    env = args["--env"]
+  
+  # Get and merge props
+  cfg = get_default_cfg(runner)
+  if not is_processor_valid(processor):
+    print "%s not found in jobs.yml" % (processor, )
+    return
+
+  cfg.update(get_processor_cfg(runner,processor))
+  cfg.update(get_env_cfg(runner, env))
+
+  # Write config file.
+  build_file = "%s/build/%s/%s.properties" % (get_app_home(), runner, processor)
+  cfg_to_file(cfg, build_file)
+  
+  cmd = "java -Dlog4j.configuration=file:///$APP_HOME/config/log4j.properties -Dsamza.container.name=samza-application-master "
+  cmd += "-cp $APP_HOME/lib/*.jar org.apache.samza.job.JobRunner "
+  cmd += "--config-factory=org.apache.samza.config.factories.PropertiesConfigFactory --config-path=file://"
+  cmd += build_file
+
+  run_command(cmd)
+
+def build_package(args):
+  package_name = args["<name>"]
+ 
+  print "-" * 100
+  print "Copying files to %s/build/package/%s" % (get_app_home(), package_name)
+  print "-" * 100
+
+  copy = "rm -rf $APP_HOME/build/package/%s && " % (package_name, )
+  copy += "mkdir -p $APP_HOME/build/package/%s/lib && " % (package_name, )
+  copy += "cp $APP_HOME/bin/yarn/*.xml $APP_HOME/build/package/%s/ && " % (package_name, )
+  copy += "cp -r $APP_HOME/{config,app} $APP_HOME/build/package/%s/ && " % (package_name, )
+  copy += "cp -r $APP_HOME/lib/{rico,vendor} $APP_HOME/build/package/%s/lib/ " % (package_name, ) 
+
+  run_command(copy)
+
+  # Run stuff
+  run_command("mvn package -f $APP_HOME/build/package/%s/pom.xml" % (package_name , ))
+
+  run_command("mv $APP_HOME/build/package/%s/target/*.tar.gz $APP_HOME/build/package/%s/target/%s.tar.gz" % (package_name, package_name, package_name))
+
+  print "-" * 100
+  print "Package : %s/build/package/%s/target/%s.tar.gz" % (get_app_home(), package_name, package_name)
+  print "-" * 100
+
+def yarn(args):
+  processor = args["<name>"]
+
+  env = "dev"
+  if args["--env"]:
+    env = args["--env"]
+  
+  # Merge samza and yarn props
+  cfg = get_default_cfg("samza")
+  if not is_processor_valid(processor):
+    print "%s not found in jobs.yml" % (processor, )
+    return
+
+  cfg.update(get_default_cfg("yarn"))
+  
+  cfg.update(get_processor_cfg("samza",processor))
+  cfg.update(get_processor_cfg("yarn",processor))
+  
+  cfg.update(get_env_cfg("samza", env))
+  cfg.update(get_env_cfg("yarn", env))
+
+  # Copy stuff to the build dir
+  
+  copy = "rm -rf $APP_HOME/build/yarn/%s && " % (processor, )
+  copy += "mkdir -p $APP_HOME/build/yarn/%s/lib && " % (processor, )
+  copy += "cp $APP_HOME/bin/yarn/*.xml $APP_HOME/build/yarn/%s/ && " % (processor, )
+  copy += "cp -r $APP_HOME/{config,app} $APP_HOME/build/yarn/%s/ && " % (processor, )
+  copy += "cp -r $APP_HOME/lib/{vendor,rico} $APP_HOME/build/yarn/%s/lib/ " % (processor, ) 
+
+  run_command(copy)
+
+  # Write config file.
+  build_file = "%s/build/%s/%s/config/%s.properties" % (get_app_home(),"yarn", processor, processor)
+  cfg["yarn.package.path"] = "file://%s/build/yarn/%s/target/%s.tar.gz" % (get_app_home(), processor, processor )
+  cfg_to_file(cfg, build_file)
+  
+  # Run stuff
+  run_command("mvn package -f $APP_HOME/build/yarn/%s/pom.xml" % (processor, ))
+
+  run = "mkdir $APP_HOME/build/yarn/%s/target/exploded && " % (processor, )
+  run += "mv $APP_HOME/build/yarn/%s/target/*.tar.gz $APP_HOME/build/yarn/%s/target/%s.tar.gz && " % (processor, processor, processor)
+  run += "tar -xzvf $APP_HOME/build/yarn/%s/target/%s.tar.gz -C $APP_HOME/build/yarn/%s/target/exploded && " % (processor, processor, processor )
+  run += "$APP_HOME/build/yarn/%s/target/exploded/bin/run-job.sh " % (processor, )
+  run += "--config-factory=org.apache.samza.config.factories.PropertiesConfigFactory "
+  run += "--config-path=file://$APP_HOME/build/yarn/%s/target/exploded/config/%s.properties" % (processor, processor)
+
+  run_command(run)
+  
+def build_jar(args):
+  # if args["local"]:
+    # cmd =  "mvn -f $APP_HOME/bin/local-pom.xml clean package "
+    # cmd += "-DbuildDir=$APP_HOME/build/maven/local  "
+    # cmd += "-Dproject.build.directory=$APP_HOME/build/maven/local "
+    # cmd += "-DsourceDirectory=$APP_HOME/config/schema &&"
+    # cmd += "cp $APP_HOME/build/maven/local/local-*.jar $APP_HOME/lib/"
+    # run_command(cmd)
+
+
+  cmd =  "mvn -f $APP_HOME/bin/samza-pom.xml clean package "
+  cmd += "-DbuildDir=$APP_HOME/build/maven/jar  && "
+  cmd += "cp $APP_HOME/build/maven/jar/samza-*.jar $APP_HOME/lib/"
+  run_command(cmd)
+
+  # else:
+    # print "Command not valid."
+
+if __name__ == '__main__':
+    args = docopt(__doc__, version='0.0.1')
+    # print(args)
+
+    if get_app_home() is None:
+      print "APP_HOME is undefined."
+    elif args["local"] :
+      local(args)
+    elif args["samza"] :
+      samza(args)
+    elif args["build"] and args["jar"]:
+      build_jar(args)
+    elif args["package"]:
+      build_package(args)
+    elif args["yarn"]:
+      yarn(args)
+    elif args["install-deps"]:
+      install_deps(args)

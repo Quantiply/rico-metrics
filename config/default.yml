@@ -1,0 +1,61 @@
+local:
+    rico:
+        schema.registry.url: "http://localhost:9081"
+        string-serde.class: com.quantiply.samza.serde.JSONStringSerde
+        drop.on.error: true
+    task:
+        class: com.quantiply.samza.JythonTask
+
+samza:
+    #Job
+    job.factory.class: org.apache.samza.job.local.ThreadJobFactory
+    #job.systemstreampartition.grouper.factory: com.quantiply.FilteredGroupBySystemStreamPartitionFactory
+
+    #Task
+    task.class: com.quantiply.rico.samza.SamzaRunner
+    task.checkpoint.factory: org.apache.samza.checkpoint.kafka.KafkaCheckpointManagerFactory
+    task.checkpoint.system: kafka
+    task.checkpoint.replication.factor: 1
+    task.log4j.system: kafka
+    task.log4j.location.info.enabled: true
+    task.log4j.stream: kafka.sys.samza_logs
+    
+    systems.kafka.streams.__samza__samza-to-statsd__1__logs.samza.msg.serde: "log4j-json"
+
+    # Metrics
+    metrics.reporters: snapshot
+    metrics.reporter.snapshot.class: org.apache.samza.metrics.reporter.MetricsSnapshotReporterFactory
+    metrics.reporter.snapshot.stream: kafka.samza.default.metrics
+    metrics.reporter.jmx.class: org.apache.samza.metrics.reporter.JmxReporterFactory
+    metrics.reporter.snapshot.stream: kafka.sys.samza_metrics
+
+    # Serializers
+    serializers.registry.json.class: org.apache.samza.serializers.JsonSerdeFactory
+    serializers.registry.str.class: org.apache.samza.serializers.StringSerdeFactory
+    serializers.registry.metrics.class: org.apache.samza.serializers.MetricsSnapshotSerdeFactory
+    serializers.registry.log4j-json.class: org.apache.samza.logging.log4j.serializers.LoggingEventJsonSerdeFactory
+
+    # Systems
+    systems.kafka.samza.factory: org.apache.samza.system.kafka.KafkaSystemFactory
+    systems.kafka.samza.msg.serde: json
+    systems.kafka.samza.key.serde: str
+    systems.kafka.streams.metrics.samza.msg.serde: metrics
+    systems.kafka.producer.producer.type: sync
+    systems.kafka.producer.batch.num.messages: 1000
+    systems.kafka.consumer.zookeeper.connect: localhost:2181
+    systems.kafka.producer.bootstrap.servers: localhost:9092
+    systems.kafka.consumer.auto.offset.reset: largest
+
+    #Stores
+    stores.localkv.factory: org.apache.samza.storage.kv.RocksDbKeyValueStorageEngineFactory
+    # stores.localkv.changelog=kafka.wikipedia-stats-changelog
+    stores.localkv.key.serde: str
+    stores.localkv.msg.serde: json
+
+yarn:
+  job.factory.class: org.apache.samza.job.yarn.YarnJobFactory
+  yarn.container:
+    count: 1
+    memory.mb: 2048
+    cpu.cores: 1
+  yarn.am.container.memory.mb: 1024
