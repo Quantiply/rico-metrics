@@ -8,12 +8,16 @@ Getting started
         pip install -r requirements.txt
         source bin/set_env.bash
         rico build jar
+        
+Building a Package For Deployment
+---
+		rico package metrics
    
 Samza Metrics to StatsD
 ---
 0. Test with Command Line Runner
 
-		cat samza-metrics.json | rico local samza-to-statsd
+		cat data/samza-metrics.json | rico local samza-to-statsd
  
 1. Test with Samza ThreadJobFactory
     
@@ -39,6 +43,8 @@ Samza Metrics to StatsD
 		grid stop yarn
 		grid stop all
 
-Building Package
+Druid Metrics to StatsD
 ---
-		rico package metrics
+0. Test with Command Line Runner
+
+		cat data/druid-metrics.json | rico local druid-to-statsd

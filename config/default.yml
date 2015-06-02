@@ -1,6 +1,5 @@
 local:
     rico:
-        schema.registry.url: "http://localhost:9081"
         string-serde.class: com.quantiply.samza.serde.JSONStringSerde
         drop.on.error: true
     task:

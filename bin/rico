@@ -23,6 +23,7 @@ Usage:
   rico build jar 
   rico package <name>
   rico install-deps
+  rico test
 Options:
   -h --help     Show this screen.
   --version     Show version.
@@ -145,6 +146,11 @@ def local(args):
   cmd += " " + str(output)
 
   run_command(cmd)
+
+def test(args):
+    cmd = "java -Dlog4j.configuration=file:///$APP_HOME/config/log4j.properties "
+    cmd += "-cp $APP_HOME/lib/samza-*.jar org.python.util.jython $APP_HOME/bin/nosetests.py  $APP_HOME/app/rico/tests"
+    run_command(cmd)
 
 def samza(args):
   processor = args["<name>"]
@@ -281,3 +287,5 @@ if __name__ == '__main__':
       yarn(args)
     elif args["install-deps"]:
       install_deps(args)
+    elif args["test"]:
+      test(args)
