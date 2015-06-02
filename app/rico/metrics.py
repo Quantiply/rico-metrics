@@ -134,12 +134,13 @@ class DruidMetricsTask(BaseTask):
                 data["source"] = "druid"
                 data["metric"] = msg["metric"]
                 data["service"] = msg["service"]
+                data["host"] = msg["host"]
                 data["timestamp"] = datetime.datetime.strptime(msg["timestamp"],\
                                                                "%Y-%m-%dT%H:%M:%S.%fZ")
                 data["type"] = "counter"
                 data["data_source"] = msg["user2"]
                 data["value"] = msg["value"]
-                names = ["source", "service", "data_source", "metric"]
+                names = ["source", "service", "host", "data_source", "metric"]
                 collector.send(OutgoingMessageEnvelope(self.output, convert_to_statsd_format(names, data)))                
         except Exception, e:
             if (self.logger.isInfoEnabled):
