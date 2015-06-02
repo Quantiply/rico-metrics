@@ -38,7 +38,7 @@ class SamzaMetricsTask(BaseTask):
         try:
             self.logger.debug(str(data))
             source = data.message["header"]["source"]
-            if data.message.has_key("asMap"):
+            if data.message.has_key("asMap"): #For Samza 0.8.0 compatibility
                 body = data.message["asMap"]
             else:
                 body = data.message
@@ -61,31 +61,37 @@ class SamzaMetricsTask(BaseTask):
         # Messages sent
         self.send_metric("messages-sent", task_metrics, data, "counter", collector)
         
-        # Rico metrics
-        rico_group_name = "com.quantiply.rico"
-        if data["metrics"].has_key(rico_group_name):
-            rico_metrics = data["metrics"][rico_group_name]
-            for parent in rico_metrics.iteritems():
-                parent_name = parent[0]
-                for metric in parent[1].iteritems():
-                    header = data["header"]
-                    m = {}
-                    m["timestamp"] = header["time"]
-                    m["source"] = "samza"
-                    m["job_id"] = replace_non_alphanum(header["job-id"])
-                    m["job_name"] = replace_non_alphanum(header["job-name"])
-                    m["task_id"] = replace_non_alphanum(header["source"])
-                    m["metric_name"] =  metric[0]
-                    m["parent_name"] = parent_name 
-                    m["type"] = "gauge"
-                    m["value"] = replace_non_alphanum(metric[1])
-                
-                    # Format : <prefix>.<source>.<job_name>.<job_id>.<task_id>.<parent_name>.<metric_name> (Dont scrub metric_group)
-                    name_cols = ["source", "job_name", "job_id", "task_id", "parent_name", "metric_name"]
-                    name = ".".join([m[i] for i in name_cols])
-                    payload = { "timestamp": m["timestamp"], "name": name, "value" : m["value"], "type" : m["type"]}
-                    collector.send(OutgoingMessageEnvelope(self.output, payload))
-                
+        self.rico_metrics(data, collector)
+        
+    def rico_metrics(self, data, collector):
+        RICO_GROUP_NAME = "com.quantiply.rico"
+        if data["metrics"].has_key(RICO_GROUP_NAME):
+            rico_metrics = data["metrics"][RICO_GROUP_NAME]
+            for (metric_name, metric_vals) in rico_metrics.iteritems():
+                self.rico_metric(data, metric_name, metric_vals, collector)
+                    
+    def rico_metric(self, data, metric_name, metric_vals, collector):
+        for (metric_attr, metric_val) in metric_vals.iteritems():
+            print(metric_attr)
+            if metric_attr == "type" or metric_attr == "rateUnit":
+                continue
+            header = data["header"]
+            m = {}
+            m["timestamp"] = header["time"]
+            m["source"] = "samza"
+            m["job_id"] = replace_non_alphanum(header["job-id"])
+            m["job_name"] = replace_non_alphanum(header["job-name"])
+            m["task_id"] = replace_non_alphanum(header["source"])
+            m["metric_attr"] =  metric_attr
+            m["metric_name"] = metric_name #(Don't scrub - dots in names are meaningful)
+            m["type"] = "gauge"
+            m["value"] = replace_non_alphanum(metric_val)
+
+            # Format : <prefix>.<source>.<job_name>.<job_id>.<task_id>.<metric_name>.<metric_attr>
+            name_cols = ["source", "job_name", "job_id", "task_id", "metric_name", "metric_attr"]
+            name = ".".join([m[i] for i in name_cols])
+            payload = { "timestamp": m["timestamp"], "name": name, "value" : m["value"], "type" : m["type"]}
+            collector.send(OutgoingMessageEnvelope(self.output, payload))
 
     def am_metrics(self, data, collector):
         am = "org.apache.samza.job.yarn.SamzaAppMasterMetrics"
