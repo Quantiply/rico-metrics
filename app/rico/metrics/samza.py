@@ -2,8 +2,9 @@ import re
 from rico.metrics.statsd import convert_to_statsd_format
 
 class SamzaMetricsConverter(object):
-    KAFKA_SYSTEM_CONSUMER_METRIC_GRP_NAME = "org.apache.samza.system.kafka.KafkaSystemConsumerMetrics"
-    TASK_METRIC_GRP_NAME = 'org.apache.samza.container.TaskInstanceMetrics'
+    KAFKA_SYSTEM_CONSUMER_GRP_NAME = "org.apache.samza.system.kafka.KafkaSystemConsumerMetrics"
+    TASK_GRP_NAME = 'org.apache.samza.container.TaskInstanceMetrics'
+    YARN_APP_MASTER_GRP_NAME = 'org.apache.samza.job.yarn.SamzaAppMasterMetrics'
 
     def parse_kafka_highwater_mark(self, metric):
         #kafka-svc.s2.call.raw.wnqcfqaytreaowaa4ovsxa-1-messages-behind-high-watermark
@@ -26,6 +27,7 @@ class SamzaMetricsConverter(object):
         """
         stats = []
         
+        stats += self.get_app_master_metrics(samza_metrics)
         stats += self.get_task_metrics(samza_metrics)
         stats += self.get_kafka_consumer_metrics(samza_metrics)
         
@@ -37,11 +39,11 @@ class SamzaMetricsConverter(object):
     
     #samza.s2_call_parse.1.container.<>
     
-    #samza.<job-name>.<job-id>.task.<TaskName_Partition_2>.<metric>
     def get_task_metrics(self, samza_metrics):
         statsd_metrics = []
-        if self.TASK_METRIC_GRP_NAME in samza_metrics['metrics']:
-            metrics = samza_metrics['metrics'][self.TASK_METRIC_GRP_NAME]
+        if self.TASK_GRP_NAME in samza_metrics['metrics']:
+            #samza.<job-name>.<job-id>.task.<TaskName_Partition_2>.<metric>
+            metrics = samza_metrics['metrics'][self.TASK_GRP_NAME]
             hdr = samza_metrics['header']
             for name in ['process-calls', 'messages-sent']:
                 metric = {
@@ -52,11 +54,27 @@ class SamzaMetricsConverter(object):
                 }
                 statsd_metrics.append(convert_to_statsd_format(metric))
         return statsd_metrics
+
+    def get_app_master_metrics(self, samza_metrics):
+        statsd_metrics = []
+        if self.YARN_APP_MASTER_GRP_NAME in samza_metrics['metrics']:
+            #samza.<job-name>.<job-id>.app-master.<metric>
+            metrics = samza_metrics['metrics'][self.YARN_APP_MASTER_GRP_NAME]
+            hdr = samza_metrics['header']
+            for name in ['job-healthy', 'needed-containers', 'running-containers', 'failed-containers', 'app-attempt-id']:
+                metric = {
+                    "timestamp": hdr['time'],
+                    "name_list": ['samza', hdr['job-name'], hdr['job-id'], 'app-master', name],
+                    "type": 'gauge',
+                    "value": metrics[name]
+                }
+                statsd_metrics.append(convert_to_statsd_format(metric))
+        return statsd_metrics
         
     def get_kafka_consumer_metrics(self, samza_metrics):
         statsd_metrics = []
-        if self.KAFKA_SYSTEM_CONSUMER_METRIC_GRP_NAME in samza_metrics["metrics"]:
-            for (metric, val) in samza_metrics["metrics"][self.KAFKA_SYSTEM_CONSUMER_METRIC_GRP_NAME].iteritems():
+        if self.KAFKA_SYSTEM_CONSUMER_GRP_NAME in samza_metrics["metrics"]:
+            for (metric, val) in samza_metrics["metrics"][self.KAFKA_SYSTEM_CONSUMER_GRP_NAME].iteritems():
                 #samza.<job-name>.<job-id>.container.<container-name>.kafka.consumer.stream.<stream>.partition.<pid>.messages-behind-high-watermark
                 if metric.endswith('messages-behind-high-watermark'):
                     parsed = self.parse_kafka_highwater_mark(metric)
