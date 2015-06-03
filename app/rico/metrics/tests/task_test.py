@@ -74,13 +74,19 @@ class DruidToStatsD(unittest.TestCase):
     def test_events(self):
         self.call_handle_msg({"feed": "metrics", "user2": "wikipedia", "service": "middlemanager", "timestamp": "2015-04-22T19:31:20.896Z", "metric": "events/processed", "value": 0, "host": "fb-agg-mm-0.dev.quantezza.com:8089"})
         
-        expected = {'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8089.wikipedia.events_processed', 'value': 0, 'timestamp': datetime(2015, 4, 22, 19, 31, 20, 896000)}
+        expected = {'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8089.datasource.wikipedia.events.processed', 'value': 0, 'timestamp': datetime(2015, 4, 22, 19, 31, 20, 896000)}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
     def test_persist(self):
         self.call_handle_msg({"feed": "metrics", "user2": "wikipedia", "service": "middlemanager", "timestamp": "2015-04-22T19:31:20.896Z", "metric": "persists/num", "value": 0, "host": "fb-agg-mm-0.dev.quantezza.com:8089"})
         
-        expected = {'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8089.wikipedia.persists_num', 'value': 0, 'timestamp': datetime(2015, 4, 22, 19, 31, 20, 896000)}
+        expected = {'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8089.datasource.wikipedia.persists.num', 'value': 0, 'timestamp': datetime(2015, 4, 22, 19, 31, 20, 896000)}
+        self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
+
+    def test_exec(self):
+        self.call_handle_msg({"feed": "metrics", "service": "druid/sit/realtime", "timestamp": "2015-06-02T18:02:24.713Z", "metric": "exec/backlog", "value": 1, "host": "thedude:8101"})
+        
+        expected = {'type': 'counter', 'name': 'druid.druid_sit_realtime.thedude_8101.node.exec.backlog', 'value': 1, 'timestamp': datetime(2015, 6, 2, 18, 2, 24, 713000)}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
     def test_filtered(self):
