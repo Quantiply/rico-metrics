@@ -54,8 +54,9 @@ class DruidMetricsTask(BaseTask):
     def handle_msg(self, data, collector, coord):
         try:
             msg = data.message
-            PREFIXES = ['events', 'rows', 'failed', 'persist']
-            if (any([msg["metric"].startswith(prefix) for prefix in PREFIXES])):
+            DS_PREFIXES = ['events', 'rows', 'failed', 'persist']
+            NODE_PREFIXES = ['exec', 'cache']
+            if any([msg["metric"].startswith(prefix) for prefix in DS_PREFIXES]):
                 #druid.<node-type>.<node>.datasource.<datasource>.<metric>
                 metric = {
                     "timestamp": datetime.strptime(msg["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ"),
@@ -64,7 +65,7 @@ class DruidMetricsTask(BaseTask):
                     "value": msg["value"]
                 }
                 collector.send(OutgoingMessageEnvelope(self.output, convert_to_statsd_format(metric)))
-            if (msg['metric'] == 'exec/backlog'):
+            elif any([msg["metric"].startswith(prefix) for prefix in NODE_PREFIXES]):
                 #druid.<node-type>.<node>.node.<metric>
                 metric = {
                     "timestamp": datetime.strptime(msg["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ"),

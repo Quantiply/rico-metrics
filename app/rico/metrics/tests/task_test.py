@@ -89,6 +89,12 @@ class DruidToStatsD(unittest.TestCase):
         expected = {'type': 'counter', 'name': 'druid.druid_sit_realtime.thedude_8101.node.exec.backlog', 'value': 1, 'timestamp': datetime(2015, 6, 2, 18, 2, 24, 713000)}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
+    def test_cache(self):
+        self.call_handle_msg({"feed": "metrics", "service": "druid/sit/broker", "timestamp": "2015-06-02T18:02:10.372Z", "metric": "cache/delta/hitRate", "value": 0.0, "host": "thedude:8080"})
+        
+        expected = {'type': 'counter', 'name': 'druid.druid_sit_broker.thedude_8080.node.cache.delta.hitRate', 'value': 0.0, 'timestamp': datetime(2015, 6, 2, 18, 2, 10, 372000)}
+        self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
+
     def test_filtered(self):
         self.call_handle_msg({"feed": "metrics", "user2": "PS Perm Gen", "service": "middlemanager", "user1": "nonheap", "timestamp": "2015-04-22T19:31:17.878Z", "metric": "jvm/pool/committed", "value": 83886080, "host": "fb-agg-mm-0.dev.quantezza.com:8189"})
         self.assertFalse(self.mock_collector.send.called)
