@@ -14,7 +14,7 @@
 #  limitations under the License.
 #
 import re
-from rico.metrics.statsd import convert_to_statsd_format, format_name
+from rico.metrics.statsd_util import convert_to_statsd_format, format_name
 
 class SamzaMetricsConverter(object):
     KAFKA_SYSTEM_CONSUMER_GRP_NAME = "org.apache.samza.system.kafka.KafkaSystemConsumerMetrics"

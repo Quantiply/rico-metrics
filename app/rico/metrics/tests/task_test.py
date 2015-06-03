@@ -16,10 +16,10 @@
 import unittest
 import mock
 from datetime import datetime
-from rico.metrics.task import *
+from rico.metrics.task import SamzaMetricsTask, DruidMetricsTask, StatsDTask
 from org.apache.samza.system import SystemStream, OutgoingMessageEnvelope
 
-class SamzaToStatsD(unittest.TestCase):
+class SamzaMetricsTaskTest(unittest.TestCase):
     
     def setUp(self):
         self.task = SamzaMetricsTask()
@@ -58,7 +58,7 @@ class SamzaToStatsD(unittest.TestCase):
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
 
-class DruidToStatsD(unittest.TestCase):
+class DruidMetricsTaskTest(unittest.TestCase):
     
     def setUp(self):
         self.task = DruidMetricsTask()
@@ -104,6 +104,21 @@ class DruidToStatsD(unittest.TestCase):
     def test_filtered(self):
         self.call_handle_msg({"feed": "metrics", "user2": "PS Perm Gen", "service": "middlemanager", "user1": "nonheap", "timestamp": "2015-04-22T19:31:17.878Z", "metric": "jvm/pool/committed", "value": 83886080, "host": "fb-agg-mm-0.dev.quantezza.com:8189"})
         self.assertFalse(self.mock_collector.send.called)
+
+
+class StatsDTaskTest(unittest.TestCase):
+    
+    def setUp(self):
+        self.task = StatsDTask()
+        self.task.client = mock.Mock()
+        self.task.drop_old_msgs = False
+        self.task.prefix = "fake.prefix"
+
+    def test_msg(self):
+        envelope = mock.Mock()
+        envelope.message = {"type":"gauge","name":"samza.s2_call_parse.1.TaskName_Partition_6.streams.default.dropped.meanRate","value":0.2,"timestamp":1433220836231}
+        self.task.handle_msg(envelope, None, None)
+        self.task.client.gauge.assert_called_once_with("fake.prefix.samza.s2_call_parse.1.TaskName_Partition_6.streams.default.dropped.meanRate", 0.2)
 
 if __name__ == '__main__':
     unittest.main()

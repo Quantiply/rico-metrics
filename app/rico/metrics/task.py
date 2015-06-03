@@ -14,14 +14,14 @@
 #  limitations under the License.
 #
 import re
-import statsd
+from statsd import StatsClient
 import time 
 from datetime import datetime
 import traceback
 from com.quantiply.samza.task import BaseTask
 from org.apache.samza.system import OutgoingMessageEnvelope
 from rico.metrics.samza import SamzaMetricsConverter
-from rico.metrics.statsd import convert_to_statsd_format
+from rico.metrics.statsd_util import convert_to_statsd_format
 
 class SamzaMetricsTask(BaseTask):
     converter = SamzaMetricsConverter()
@@ -85,8 +85,9 @@ class StatsDTask(BaseTask):
         statsd_host = config.get("rico.statsd.host")
         statsd_port = config.get("rico.statsd.port")
         
-        self.client = statsd.StatsClient(statsd_host, statsd_port)
+        self.client = StatsClient(statsd_host, statsd_port)
         self.drop_secs = int(config.get("rico.drop.secs"))
+        self.drop_old_msgs = True
         self.prefix = config.get("rico.statsd.prefix")
         self.logger.info("Drop secs: %s" % self.drop_secs)
         
@@ -101,7 +102,7 @@ class StatsDTask(BaseTask):
             current_time_in_ms = int(round(time.time() * 1000))
             time_diff_in_secs = (current_time_in_ms - timestamp) / 1000
             # Check if the metric is within the window period
-            if time_diff_in_secs > self.drop_secs:
+            if self.drop_old_msgs and time_diff_in_secs > self.drop_secs:
                 if self.logger.isDebugEnabled:
                     self.logger.debug("Time diff %ss is greater than configured maximum %ss...dropping msg" % (time_diff_in_secs, self.drop_secs))
                 self.client.incr("samza.statsd_push.dropped_messages", 1)
