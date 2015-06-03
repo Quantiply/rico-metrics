@@ -13,33 +13,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-from com.quantiply.samza.task import BaseTask
-from org.apache.samza.system import OutgoingMessageEnvelope
-from rico.metrics.samza import SamzaMetricsConverter
 import re
 import statsd
 import time 
-import datetime
+from datetime import datetime
 import traceback
-
-def replace_non_alphanum(val, replacement="_"):
-    return re.sub('[^0-9a-zA-Z]+', replacement, val)
-
-def convert_to_statsd_format(name_keys, metric):
-    """
-    Format data for statsd topic
-    
-    Args:
-      name_keys: List of keys for join to create the metric name
-      metric: metric data
-          - requires timestamp, type, value fields along with all name_keys
-
-    Returns:
-      Data for statsd topic with keys: timestamp, name, value, type
-
-    """
-    name = ".".join([replace_non_alphanum(metric[i]) for i in name_keys])
-    return { "timestamp": metric["timestamp"], "name": name, "value" : metric["value"], "type" : metric["type"]}
+from com.quantiply.samza.task import BaseTask
+from org.apache.samza.system import OutgoingMessageEnvelope
+from rico.metrics.samza import SamzaMetricsConverter
+from rico.metrics.statsd import convert_to_statsd_format
 
 class SamzaMetricsTask(BaseTask):
     converter = SamzaMetricsConverter()
@@ -74,18 +56,14 @@ class DruidMetricsTask(BaseTask):
             msg = data.message
             PREFIXES = ['events', 'rows', 'failed', 'persist']
             if (any([msg["metric"].startswith(prefix) for prefix in PREFIXES])):
-                data = {}
-                data["source"] = "druid"
-                data["metric"] = msg["metric"]
-                data["service"] = msg["service"]
-                data["host"] = msg["host"]
-                data["timestamp"] = datetime.datetime.strptime(msg["timestamp"],\
-                                                               "%Y-%m-%dT%H:%M:%S.%fZ")
-                data["type"] = "counter"
-                data["data_source"] = msg["user2"]
-                data["value"] = msg["value"]
-                names = ["source", "service", "host", "data_source", "metric"]
-                collector.send(OutgoingMessageEnvelope(self.output, convert_to_statsd_format(names, data)))                
+                #druid.<node-type>.<node>.<datasource>.<metric>
+                metric = {
+                    "timestamp": datetime.strptime(msg["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "name_list": ['druid', msg["service"], msg["host"], msg["user2"], msg["metric"]],
+                    "type": 'counter',
+                    "value": msg["value"]
+                }
+                collector.send(OutgoingMessageEnvelope(self.output, convert_to_statsd_format(metric)))
         except Exception, e:
             if (self.logger.isInfoEnabled):
                 self.logger.info("Error while processing record" + str(data) + ": " + e.message)
