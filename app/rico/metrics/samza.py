@@ -3,6 +3,7 @@ from rico.metrics.statsd import convert_to_statsd_format
 
 class SamzaMetricsConverter(object):
     KAFKA_SYSTEM_CONSUMER_METRIC_GRP_NAME = "org.apache.samza.system.kafka.KafkaSystemConsumerMetrics"
+    TASK_METRIC_GRP_NAME = 'org.apache.samza.container.TaskInstanceMetrics'
 
     def parse_kafka_highwater_mark(self, metric):
         #kafka-svc.s2.call.raw.wnqcfqaytreaowaa4ovsxa-1-messages-behind-high-watermark
@@ -25,6 +26,7 @@ class SamzaMetricsConverter(object):
         """
         stats = []
         
+        stats += self.get_task_metrics(samza_metrics)
         stats += self.get_kafka_consumer_metrics(samza_metrics)
         
         return stats
@@ -34,7 +36,22 @@ class SamzaMetricsConverter(object):
     #samza.<job-name>.<job-id>.container.<container-name>.kafka.consumer.stream.<stream>.partition.<pid>.msgs-behind-broker
     
     #samza.s2_call_parse.1.container.<>
-    #samza.<job-name>.<job-id>.task.<TaskName_Partition_2>.lag_from_origin_ms_min
+    
+    #samza.<job-name>.<job-id>.task.<TaskName_Partition_2>.<metric>
+    def get_task_metrics(self, samza_metrics):
+        statsd_metrics = []
+        if self.TASK_METRIC_GRP_NAME in samza_metrics['metrics']:
+            metrics = samza_metrics['metrics'][self.TASK_METRIC_GRP_NAME]
+            hdr = samza_metrics['header']
+            for name in ['process-calls', 'messages-sent']:
+                metric = {
+                    "timestamp": hdr['time'],
+                    "name_list": ['samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'], name],
+                    "type": 'gauge',
+                    "value": metrics[name]
+                }
+                statsd_metrics.append(convert_to_statsd_format(metric))
+        return statsd_metrics
         
     def get_kafka_consumer_metrics(self, samza_metrics):
         statsd_metrics = []
