@@ -7,7 +7,9 @@ Getting started
  
         pip install -r requirements.txt
         source bin/set_env.bash
+        rico install-deps
         rico build jar
+        rico test
         
 Building a Package For Deployment
 ---
