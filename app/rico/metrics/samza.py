@@ -1,10 +1,11 @@
 import re
-from rico.metrics.statsd import convert_to_statsd_format
+from rico.metrics.statsd import convert_to_statsd_format, format_name
 
 class SamzaMetricsConverter(object):
     KAFKA_SYSTEM_CONSUMER_GRP_NAME = "org.apache.samza.system.kafka.KafkaSystemConsumerMetrics"
     TASK_GRP_NAME = 'org.apache.samza.container.TaskInstanceMetrics'
     YARN_APP_MASTER_GRP_NAME = 'org.apache.samza.job.yarn.SamzaAppMasterMetrics'
+    RICO_GRP_NAME = 'com.quantiply.rico'
 
     def parse_kafka_highwater_mark(self, metric):
         #kafka-svc.s2.call.raw.wnqcfqaytreaowaa4ovsxa-1-messages-behind-high-watermark
@@ -30,19 +31,36 @@ class SamzaMetricsConverter(object):
         stats += self.get_app_master_metrics(samza_metrics)
         stats += self.get_task_metrics(samza_metrics)
         stats += self.get_kafka_consumer_metrics(samza_metrics)
+        stats += self.get_rico_metrics(samza_metrics)
         
         return stats
-
-    #samza.s2_call_parse.1.TaskName_Partition_2.lag_from_origin_ms_min
-
-    #samza.<job-name>.<job-id>.container.<container-name>.kafka.consumer.stream.<stream>.partition.<pid>.msgs-behind-broker
     
-    #samza.s2_call_parse.1.container.<>
+    def get_rico_metrics(self, samza_metrics):
+        statsd_metrics = []
+        if self.RICO_GRP_NAME in samza_metrics['metrics']:
+            #samza.<job-name>.<job-id>.task.<task-name>.rico.<metric-name>.<metric-attr>
+            #   NOTE: <metric-name> not escaped - the dots have meaning
+            metrics = samza_metrics['metrics'][self.RICO_GRP_NAME]
+            hdr = samza_metrics['header']
+            for (metric_name, metric_attrs) in metrics.iteritems():
+                for (metric_attr, val) in metric_attrs.iteritems():
+                    if metric_attr == "type" or metric_attr == "rateUnit":
+                        continue
+                    name_list = [format_name(n) for n in ('samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'])] \
+                        + ['rico', metric_name, metric_attr]
+                    metric = {
+                        "timestamp": hdr['time'],
+                        "name_list": name_list,
+                        "type": 'gauge',
+                        "value": val
+                    }
+                    statsd_metrics.append(convert_to_statsd_format(metric, format_names=False))
+        return statsd_metrics
     
     def get_task_metrics(self, samza_metrics):
         statsd_metrics = []
         if self.TASK_GRP_NAME in samza_metrics['metrics']:
-            #samza.<job-name>.<job-id>.task.<TaskName_Partition_2>.<metric>
+            #samza.<job-name>.<job-id>.task.<task-name>.<metric>
             metrics = samza_metrics['metrics'][self.TASK_GRP_NAME]
             hdr = samza_metrics['header']
             for name in ['process-calls', 'messages-sent']:

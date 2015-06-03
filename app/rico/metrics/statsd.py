@@ -1,9 +1,9 @@
 import re
 
-def replace_non_alphanum(val, replacement="_"):
+def format_name(val, replacement="_"):
     return re.sub('[^0-9a-zA-Z]+', replacement, val)
 
-def convert_to_statsd_format(metric):
+def convert_to_statsd_format(metric, format_names=True):
     """
     Format data for statsd topic
     
@@ -14,10 +14,14 @@ def convert_to_statsd_format(metric):
           - type - metric type in set ('gauge', 'counter')
           - value - metric value
           - requires timestamp, type, value fields along with all name_keys
+      format_names (boolean, optional): if True, replace special characters in names
 
     Returns:
       Data for statsd topic with keys: timestamp, name, value, type
 
     """
-    name = ".".join([replace_non_alphanum(n) for n in metric['name_list']])
+    name_list = metric['name_list']
+    if format_names:
+        name_list = [format_name(n) for n in metric['name_list']]
+    name = ".".join(name_list)
     return { "timestamp": metric["timestamp"], "name": name, "value" : metric["value"], "type" : metric["type"]}
