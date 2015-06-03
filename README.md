@@ -13,6 +13,7 @@ Getting started
         
 Building a Package For Deployment
 ---
+		rico install-deps
 		rico package metrics
    
 Samza Metrics to StatsD
