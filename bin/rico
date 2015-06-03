@@ -149,7 +149,7 @@ def local(args):
 
 def test(args):
     cmd = "java -Dlog4j.configuration=file:///$APP_HOME/config/log4j.properties "
-    cmd += "-cp $APP_HOME/lib/samza-*.jar org.python.util.jython $APP_HOME/bin/nosetests.py  $APP_HOME/app/rico/tests"
+    cmd += "-cp $APP_HOME/lib/samza-*.jar org.python.util.jython $APP_HOME/bin/nosetests.py  $APP_HOME/app"
     run_command(cmd)
 
 def samza(args):
