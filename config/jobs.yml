@@ -1,7 +1,7 @@
 samza-to-statsd:
   common:
     rico:
-      jython.entrypoint: rico.metrics.SamzaMetricsTask
+      jython.entrypoint: rico.metrics.task.SamzaMetricsTask
       streams.out: sys.statsd
   samza:
     job.name: samza-to-statsd
@@ -14,7 +14,7 @@ samza-to-statsd:
 druid-to-statsd:
   common:
     rico:
-      jython.entrypoint: rico.metrics.DruidMetricsTask
+      jython.entrypoint: rico.metrics.task.DruidMetricsTask
       streams.out: sys.statsd
   samza:
     job.name: druid-to-statsd
@@ -25,7 +25,7 @@ druid-to-statsd:
 statsd-push:
   common:
     rico:
-      jython.entrypoint: rico.metrics.StatsDTask
+      jython.entrypoint: rico.metrics.task.StatsDTask
       drop.secs: 60
       statsd:
         prefix: RTOI.sit
