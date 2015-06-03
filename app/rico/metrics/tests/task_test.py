@@ -95,6 +95,12 @@ class DruidToStatsD(unittest.TestCase):
         expected = {'type': 'counter', 'name': 'druid.druid_sit_broker.thedude_8080.node.cache.delta.hitRate', 'value': 0.0, 'timestamp': datetime(2015, 6, 2, 18, 2, 10, 372000)}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
+    def test_query(self):
+        self.call_handle_msg({"feed": "metrics", "user6": "false", "user4": "timeseries", "user5": ["2015-06-02T17:00:00.000Z/2015-06-02T18:02:13.800Z"], "user2": "svc_perf", "service": "druid/sit/realtime", "user7": "2 aggs", "timestamp": "2015-06-02T18:02:12.660Z", "metric": "query/time", "value": 4, "user9": "PT62M", "host": "thedude:8101", "user8": "d240be3d-59d0-4c6d-8310-189a281bbdd7"})
+        
+        expected = {'type': 'counter', 'name': 'druid.druid_sit_realtime.thedude_8101.datasource.svc_perf.query.time', 'value': 4, 'timestamp': datetime(2015, 6, 2, 18, 2, 12, 660000)}
+        self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
+
     def test_filtered(self):
         self.call_handle_msg({"feed": "metrics", "user2": "PS Perm Gen", "service": "middlemanager", "user1": "nonheap", "timestamp": "2015-04-22T19:31:17.878Z", "metric": "jvm/pool/committed", "value": 83886080, "host": "fb-agg-mm-0.dev.quantezza.com:8189"})
         self.assertFalse(self.mock_collector.send.called)
