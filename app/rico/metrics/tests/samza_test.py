@@ -25,6 +25,47 @@ class SamzaMetricsConverterTest(unittest.TestCase):
     def test_parse_kafka_highwater_mark(self):
         result = self.converter.parse_kafka_highwater_mark("kafka-svc.s2.call.raw.wnqcfqaytreaowaa4ovsxa-1-messages-behind-high-watermark")
         self.assertEquals({'stream': 'svc.s2.call.raw.wnqcfqaytreaowaa4ovsxa', 'partition': '1'}, result)
+
+    def test_container_jvm_metrics(self):
+        data = {
+            "header": {
+                "job-id": "1",
+                "samza-version": "0.9.0",
+                "job-name": "deploy-svc-repartition",
+                "host": "thedude",
+                "reset-time": 1433533612817,
+                "container-name": "samza-container-0",
+                "source": "samza-container-0",
+                "time": 1433547788717,
+                "version": "0.0.1"
+            },
+            "metrics": {
+                "org.apache.samza.metrics.JvmMetrics": {
+                    "mem-heap-committed-mb": 276.5,
+                    "threads-waiting": 4,
+                    "threads-timed-waiting": 7,
+                    "threads-runnable": 8,
+                    "mem-heap-used-mb": 177.00165,
+                    "ps scavenge-gc-count": 27,
+                    "ps scavenge-gc-time-millis": 3073,
+                    "gc-count": 33,
+                    "mem-non-heap-used-mb": 38.16989,
+                    "threads-new": 0,
+                    "ps marksweep-gc-count": 6,
+                    "threads-blocked": 0,
+                    "gc-time-millis": 3816,
+                    "mem-non-heap-committed-mb": 38.875,
+                    "ps marksweep-gc-time-millis": 743,
+                    "threads-terminated": 0
+                }
+        }
+        metrics = self.converter.get_statsd_metrics(data)
+        expected = [
+            {'timestamp': 1433220776087, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.3.messages_behind_high_watermark', 'value': 987987},
+            {'timestamp': 1433220776087, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.4.messages_behind_high_watermark', 'value': 8},
+            {'timestamp': 1433220776087, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.5.messages_behind_high_watermark', 'value': 4}
+        ]
+        self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
         
     def test_kafka_consumer_lag(self):
         data = {
