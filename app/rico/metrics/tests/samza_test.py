@@ -103,6 +103,24 @@ class SamzaMetricsConverterTest(unittest.TestCase):
                 "version": "0.0.1"
             },
             "metrics": {
+                "org.apache.samza.metrics.JvmMetrics": {
+                    "mem-heap-committed-mb": 308,
+                    "threads-waiting": 5,
+                    "threads-timed-waiting": 30,
+                    "threads-runnable": 11,
+                    "mem-heap-used-mb": 103.311905,
+                    "ps scavenge-gc-count": 16,
+                    "ps scavenge-gc-time-millis": 243,
+                    "gc-count": 21,
+                    "mem-non-heap-used-mb": 49.18598,
+                    "threads-new": 0,
+                    "ps marksweep-gc-count": 5,
+                    "threads-blocked": 0,
+                    "gc-time-millis": 655,
+                    "mem-non-heap-committed-mb": 50.148438,
+                    "ps marksweep-gc-time-millis": 412,
+                    "threads-terminated": 0
+                },
                 "org.apache.samza.job.yarn.SamzaAppMasterMetrics": {
                     "job-healthy": 1,
                     "http-port": 59670,
@@ -123,6 +141,22 @@ class SamzaMetricsConverterTest(unittest.TestCase):
             {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.app_attempt_id', 'value': 'appattempt_1429549600644_0011_000001'},
             {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.failed_containers', 'value': 0},
             {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.job_healthy', 'value': 1},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.gc_count', 'value': 21},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.gc_time_millis', 'value': 655},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.mem_heap_committed_mb', 'value': 308},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.mem_heap_used_mb', 'value': 103.311905},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.mem_non_heap_committed_mb', 'value': 50.148438},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.mem_non_heap_used_mb', 'value': 49.18598},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.ps_marksweep_gc_count', 'value': 5},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.ps_marksweep_gc_time_millis', 'value': 412},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.ps_scavenge_gc_count', 'value': 16},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.ps_scavenge_gc_time_millis', 'value': 243},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_blocked', 'value': 0},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_new', 'value': 0},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_runnable', 'value': 11},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_terminated', 'value': 0},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_timed_waiting', 'value': 30},
+            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_waiting', 'value': 5},
             {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.needed_containers', 'value': 0},
             {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.running_containers', 'value': 1}
         ]

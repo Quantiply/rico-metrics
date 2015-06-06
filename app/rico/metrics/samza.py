@@ -20,6 +20,7 @@ class SamzaMetricsConverter(object):
     KAFKA_SYSTEM_CONSUMER_GRP_NAME = "org.apache.samza.system.kafka.KafkaSystemConsumerMetrics"
     TASK_GRP_NAME = 'org.apache.samza.container.TaskInstanceMetrics'
     YARN_APP_MASTER_GRP_NAME = 'org.apache.samza.job.yarn.SamzaAppMasterMetrics'
+    JVM_GRP_NAME = 'org.apache.samza.metrics.JvmMetrics'
     RICO_GRP_NAME = 'com.quantiply.rico'
 
     def parse_kafka_highwater_mark(self, metric):
@@ -41,9 +42,12 @@ class SamzaMetricsConverter(object):
           List of statsd messages, each with keys: timestamp, name, value, type
 
         """
-        stats = []
+        hdr = samza_metrics['header']
         
-        stats += self.get_app_master_metrics(samza_metrics)
+        if hdr['source'] == 'ApplicationMaster':
+            return self.get_app_master_metrics(samza_metrics)
+        
+        stats = []
         stats += self.get_task_metrics(samza_metrics)
         stats += self.get_kafka_consumer_metrics(samza_metrics)
         stats += self.get_rico_metrics(samza_metrics)
@@ -89,6 +93,26 @@ class SamzaMetricsConverter(object):
         return statsd_metrics
 
     def get_app_master_metrics(self, samza_metrics):
+        return self.get_app_master_jvm_metrics(samza_metrics) \
+            + self.get_app_master_health_metrics(samza_metrics)
+
+    def get_app_master_jvm_metrics(self, samza_metrics):
+        statsd_metrics = []
+        if self.JVM_GRP_NAME in samza_metrics['metrics']:
+            #samza.<job-name>.<job-id>.app-master.jvm.<metric>
+            metrics = samza_metrics['metrics'][self.JVM_GRP_NAME]
+            hdr = samza_metrics['header']
+            for name in metrics.keys():
+                metric = {
+                    "timestamp": hdr['time'],
+                    "name_list": ['samza', hdr['job-name'], hdr['job-id'], 'app-master', 'jvm', name],
+                    "type": 'gauge',
+                    "value": metrics[name]
+                }
+                statsd_metrics.append(convert_to_statsd_format(metric))
+        return statsd_metrics
+
+    def get_app_master_health_metrics(self, samza_metrics):
         statsd_metrics = []
         if self.YARN_APP_MASTER_GRP_NAME in samza_metrics['metrics']:
             #samza.<job-name>.<job-id>.app-master.<metric>
