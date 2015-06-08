@@ -42,28 +42,16 @@ class SamzaMetricsConverterTest(unittest.TestCase):
             "metrics": {
                 "org.apache.samza.metrics.JvmMetrics": {
                     "mem-heap-committed-mb": 276.5,
-                    "threads-waiting": 4,
-                    "threads-timed-waiting": 7,
-                    "threads-runnable": 8,
-                    "mem-heap-used-mb": 177.00165,
-                    "ps scavenge-gc-count": 27,
                     "ps scavenge-gc-time-millis": 3073,
-                    "gc-count": 33,
-                    "mem-non-heap-used-mb": 38.16989,
-                    "threads-new": 0,
-                    "ps marksweep-gc-count": 6,
-                    "threads-blocked": 0,
-                    "gc-time-millis": 3816,
-                    "mem-non-heap-committed-mb": 38.875,
-                    "ps marksweep-gc-time-millis": 743,
-                    "threads-terminated": 0
+                    "mem-non-heap-used-mb": 38.16989
                 }
+            }
         }
         metrics = self.converter.get_statsd_metrics(data)
         expected = [
-            {'timestamp': 1433220776087, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.3.messages_behind_high_watermark', 'value': 987987},
-            {'timestamp': 1433220776087, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.4.messages_behind_high_watermark', 'value': 8},
-            {'timestamp': 1433220776087, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.5.messages_behind_high_watermark', 'value': 4}
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.jvm.mem_heap_committed_mb', 'value': 276.5},
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.jvm.mem_non_heap_used_mb', 'value': 38.16989},
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.jvm.ps_scavenge_gc_time_millis', 'value': 3073}
         ]
         self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
         

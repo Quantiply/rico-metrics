@@ -43,16 +43,39 @@ class SamzaMetricsConverter(object):
 
         """
         hdr = samza_metrics['header']
-        
+
         if hdr['source'] == 'ApplicationMaster':
             return self.get_app_master_metrics(samza_metrics)
-        
+
+        if hdr['source'] == hdr['container-name']:
+            return self.get_container_metrics(samza_metrics)
+
+        return self.get_task_metrics(samza_metrics)
+    
+    def get_container_metrics(self, samza_metrics):
         stats = []
-        stats += self.get_task_metrics(samza_metrics)
+        stats += self.get_container_jvm_metrics(samza_metrics)
         stats += self.get_kafka_consumer_metrics(samza_metrics)
-        stats += self.get_rico_metrics(samza_metrics)
-        
         return stats
+
+    def get_container_jvm_metrics(self, samza_metrics):
+        statsd_metrics = []
+        if self.JVM_GRP_NAME in samza_metrics['metrics']:
+            #samza.<job-name>.<job-id>.container.<container-name>.jvm.<metric>
+            metrics = samza_metrics['metrics'][self.JVM_GRP_NAME]
+            hdr = samza_metrics['header']
+            for name in metrics.keys():
+                metric = {
+                    "timestamp": hdr['time'],
+                    "name_list": [
+                        'samza', hdr['job-name'], hdr['job-id'], 'container', hdr['container-name'],
+                        'jvm', name
+                    ],
+                    "type": 'gauge',
+                    "value": metrics[name]
+                }
+                statsd_metrics.append(convert_to_statsd_format(metric))
+        return statsd_metrics
     
     def get_rico_metrics(self, samza_metrics):
         statsd_metrics = []
@@ -75,8 +98,14 @@ class SamzaMetricsConverter(object):
                     }
                     statsd_metrics.append(convert_to_statsd_format(metric, format_names=False))
         return statsd_metrics
-    
+
     def get_task_metrics(self, samza_metrics):
+        stats = []
+        stats += self.get_task_builtin_metrics(samza_metrics)
+        stats += self.get_rico_metrics(samza_metrics)
+        return stats
+    
+    def get_task_builtin_metrics(self, samza_metrics):
         statsd_metrics = []
         if self.TASK_GRP_NAME in samza_metrics['metrics']:
             #samza.<job-name>.<job-id>.task.<task-name>.<metric>
