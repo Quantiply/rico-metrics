@@ -36,7 +36,7 @@ class SamzaMetricsConverter(object):
         Format data for statsd topic
     
         Args:
-          samza_metrics (dict): python dict from Samza metrics JSON
+          samza_metrics (dict): python dict from Samza metrics JSON msg
 
         Returns:
           List of statsd messages, each with keys: timestamp, name, value, type
