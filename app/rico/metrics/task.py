@@ -55,7 +55,7 @@ class DruidMetricsTask(BaseTask):
         try:
             msg = data.message
             DS_PREFIXES = ['events', 'rows', 'failed', 'persist', 'query']
-            NODE_PREFIXES = ['exec', 'cache']
+            NODE_PREFIXES = ['exec', 'cache', 'jvm']
             if any([msg["metric"].startswith(prefix) for prefix in DS_PREFIXES]):
                 #druid.<node-type>.<node>.datasource.<datasource>.<metric>
                 metric = {

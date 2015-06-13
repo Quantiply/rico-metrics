@@ -101,10 +101,11 @@ class DruidMetricsTaskTest(unittest.TestCase):
         expected = {'type': 'counter', 'name': 'druid.druid_sit_realtime.thedude_8101.datasource.svc_perf.query.time', 'value': 4, 'timestamp': datetime(2015, 6, 2, 18, 2, 12, 660000)}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
-    def test_filtered(self):
+    def test_jvm(self):
         self.call_handle_msg({"feed": "metrics", "user2": "PS Perm Gen", "service": "middlemanager", "user1": "nonheap", "timestamp": "2015-04-22T19:31:17.878Z", "metric": "jvm/pool/committed", "value": 83886080, "host": "fb-agg-mm-0.dev.quantezza.com:8189"})
-        self.assertFalse(self.mock_collector.send.called)
-
+        
+        expected = {'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8189.node.jvm.pool.committed', 'value': 83886080, 'timestamp': datetime(2015, 4, 22, 19, 31, 17, 878000)}
+        self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
 class StatsDTaskTest(unittest.TestCase):
     

@@ -13,14 +13,14 @@ Getting started
         
 Building a Package For Deployment
 ---
-		rico install-deps
-		rico package metrics
+        rico install-deps
+        rico package metrics
    
 Samza Metrics to StatsD
 ---
 0. Test with Command Line Runner
 
-		cat data/samza-metrics.json | rico local samza-to-statsd
+        cat data/samza-metrics.json | rico local samza-to-statsd
  
 1. Test with Samza ThreadJobFactory
     
@@ -50,4 +50,4 @@ Druid Metrics to StatsD
 ---
 0. Test with Command Line Runner
 
-		cat data/druid-metrics.json | rico local druid-to-statsd
+        cat data/druid-metrics.json | rico local druid-to-statsd
