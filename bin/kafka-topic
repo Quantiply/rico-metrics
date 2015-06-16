@@ -110,13 +110,22 @@ def list(args):
    print ""      
 
 
-def delete(args):
+def delete(topic, zk):
    for topic in load_cfg(args).iteritems():
       cmd = "%s/bin/kafka-topics --zookeeper %s --topic %s --delete" \
          % (get_kafka_home(), zk, topic)
    print "Running : " , cmd
 
 
+def describe(topic, zk):
+   for topic in load_cfg(args).iteritems():
+      cmd = "%s/bin/kafka-topics --zookeeper %s --topic %s --describe" \
+         % (get_kafka_home(), zk, topic)
+   print "Running : " , cmd
+
+def describe_all(args):
+   for topic in load_cfg(args).iteritems():
+      describe(topic[0], get_zk(args))
 
 if __name__ == '__main__':
    args = docopt(__doc__, version='0.0.1')
