@@ -146,9 +146,10 @@ def update(topic, partitions, replicas, zk):
 
   if(flag==1):
     print "Topic updated!!"
-  else if(flag==0):
-    print "Topic created!!"
-    create_topic(topic, partitions, replicas, zk)
+  else: 
+    if(flag==0):
+      print "Topic created!!"
+      create_topic(topic, partitions, replicas, zk)
 
 
 
