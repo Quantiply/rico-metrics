@@ -109,6 +109,15 @@ def list(args):
    print(table.draw())
    print ""      
 
+
+def delete(args):
+   for topic in load_cfg(args).iteritems():
+      cmd = "%s/bin/kafka-topics --zookeeper %s --topic %s --delete" \
+         % (get_kafka_home(), zk, topic)
+   print "Running : " , cmd
+
+
+
 if __name__ == '__main__':
    args = docopt(__doc__, version='0.0.1')
    print ""
