@@ -110,23 +110,23 @@ def list(args):
    print ""      
 
 
-def delete(topic, zk):
-   for topic in load_cfg(args).iteritems():
-      cmd = "%s/bin/kafka-topics --zookeeper %s --topic %s --delete" \
-         % (get_kafka_home(), zk, topic)
-   print "Running : " , cmd
+def delete(args):
+  zk=args['-z']
+  topic1 = args['<name>']
+  cmd = "%s/bin/kafka-topics --zookeeper %s --topic %s --delete" \
+    % (get_kafka_home(), zk, topic1)
+  print "Running : " , cmd
+  run_command(cmd)
 
-   run_command(cmd)
 
 
-
-def describe(topic, zk):
-   for topic in load_cfg(args).iteritems():
-      cmd = "%s/bin/kafka-topics --zookeeper %s --topic %s --describe" \
-         % (get_kafka_home(), zk, topic)
-   print "Running : " , cmd
-
-   run_command(cmd)
+def describe(args):
+  zk=args['-z']
+  topic = args['<name>']
+  cmd = "%s/bin/kafka-topics --zookeeper %s --topic %s --describe" \
+    % (get_kafka_home(), zk, topic)
+  print "Running : " , cmd
+  run_command(cmd)
 
 def describe_all(args):
    for topic in load_cfg(args).iteritems():
@@ -168,3 +168,9 @@ if __name__ == '__main__':
       create_all(args)
    elif args['list']:
       list(args)
+   elif args['delete']:
+      delete(args)
+   elif args['describe']:
+      describe(args)
+   elif args['describe-all']:
+      describe_all()
