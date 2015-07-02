@@ -134,22 +134,12 @@ def describe_all(args):
 
 def update(topic, partitions, replicas, zk):
 
-  config = load_cfg(args)
-  flag=0;
-  for x in config:
-    if(x==topic):
-      cmd = "%s/bin/kafka-topics --zookeeper %s --alter --topic %s --partitions %s --replication-factor %s" \
-         % (get_kafka_home(), zk, topic, partitions, replicas)
-      print "Running command: ", cmd
-      run_command(cmd)
-      flag=1;
-
-  if(flag==1):
-    print "Topic updated!!"
-  else: 
-    if(flag==0):
-      print "Topic created!!"
-      create_topic(topic, partitions, replicas, zk)
+  topic = args['<name>']
+  for topic in load_cfg(args).iteritems():
+    cmd = "%s/bin/kafka-topics --zookeeper %s --alter --topic %s --partitions %s --replication-factor %s" \
+        % (get_kafka_home(), get_zk(args), topic, config[name]['partitions'], config[name]['replicas'])
+  print "Running command: ", cmd
+  run_command(cmd)
 
 
 
