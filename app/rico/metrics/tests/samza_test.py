@@ -207,16 +207,16 @@ class SamzaMetricsConverterTest(unittest.TestCase):
             "metrics": {
                 "com.quantiply.rico": {
                     "processed": {
-                        "oneMinuteRate": "4.4269901298545785E-9",
-                        "meanRate": "130.25192997193733",
-                        "count": "81974906",
+                        "oneMinuteRate": 4.4269,
+                        "meanRate": 130.25192997193733,
+                        "count": 81974906,
                         "rateUnit": "SECONDS",
                         "type": "meter"
                     },
                     "lag-from-origin-ms": {
-                        "75thPercentile": "3052.0",
-                        "95thPercentile": "4051.0",
-                        "mean": "2354.6792396139635",
+                        "75thPercentile": 3052.0,
+                        "95thPercentile": 4051.0,
+                        "mean": 2354.6792396139635,
                         "type": "histogram"
                     }
                 }
@@ -224,11 +224,11 @@ class SamzaMetricsConverterTest(unittest.TestCase):
         }
         metrics = self.converter.get_statsd_metrics(data)
         expected = [
-            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.lag-from-origin-ms.75thPercentile', 'value': '3052.0'},
-            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.lag-from-origin-ms.95thPercentile', 'value': '4051.0'},
-            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.lag-from-origin-ms.mean', 'value': '2354.6792396139635'},
-            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.processed.count', 'value': '81974906'},
-            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.processed.meanRate', 'value': '130.25192997193733'},
-            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.processed.oneMinuteRate', 'value': '4.4269901298545785E-9'}
+            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.lag-from-origin-ms.75thPercentile', 'value': 3052.0},
+            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.lag-from-origin-ms.95thPercentile', 'value': 4051.0},
+            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.lag-from-origin-ms.mean', 'value': 2354.6792396139635},
+            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.processed.count', 'value': 81974906},
+            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.processed.meanRate', 'value': 130.25192997193733},
+            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.processed.oneMinuteRate', 'value': 4.4269}
         ]
         self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))

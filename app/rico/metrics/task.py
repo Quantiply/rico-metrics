@@ -80,6 +80,7 @@ class DruidMetricsTask(BaseTask):
             raise e
 
 class StatsDTask(BaseTask):
+    METRIC_GROUP_NAME = "statsd_push"
     
     def _init(self, config, context, metric_adaptor):
         statsd_host = config.get("rico.statsd.host")
@@ -105,7 +106,7 @@ class StatsDTask(BaseTask):
             if self.drop_old_msgs and time_diff_in_secs > self.drop_secs:
                 if self.logger.isDebugEnabled:
                     self.logger.debug("Time diff %ss is greater than configured maximum %ss...dropping msg" % (time_diff_in_secs, self.drop_secs))
-                self.client.incr("samza.statsd_push.dropped_messages", 1)
+                self.client.incr(self.get_own_stat_name("old_messages_dropped"), 1)
             else:
                 if self.logger.isDebugEnabled:
                     self.logger.debug("|".join([metric_type, name, str(msg['value'])]))
@@ -113,8 +114,11 @@ class StatsDTask(BaseTask):
                     self.client.gauge(name, msg["value"])
                 elif metric_type == "counter":
                     self.client.incr(name, msg["value"])
+                self.client.incr(self.get_own_stat_name("messages_sent"), 1)
         except Exception, e:
             if (self.logger.isInfoEnabled):
                 self.logger.info("Error while processing record" + str(data) + ": " + e.message)
             raise e
-
+            
+    def get_own_stat_name(self, name):
+        return "%s.%s.%s" % (self.prefix, self.METRIC_GROUP_NAME, name)
