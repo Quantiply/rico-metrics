@@ -34,7 +34,7 @@ under the License.
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <samza.version>0.9.0</samza.version>
-    <rico.version>0.0.4</rico.version>
+    <rico.version>0.0.5</rico.version>
     <samza.version>0.9.0</samza.version>
     <kafka.version>0.8.2.1</kafka.version>
     <jackson.version>1.8.5</jackson.version>
