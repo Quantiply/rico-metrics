@@ -85,18 +85,46 @@ class SamzaMetricsConverter(object):
             metrics = samza_metrics['metrics'][self.RICO_GRP_NAME]
             hdr = samza_metrics['header']
             for (metric_name, metric_attrs) in metrics.iteritems():
-                for (metric_attr, val) in metric_attrs.iteritems():
-                    if metric_attr == "type" or metric_attr == "rateUnit":
-                        continue
-                    name_list = [format_name(n) for n in ('samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'])] \
-                        + ['rico', metric_name, metric_attr]
-                    metric = {
-                        "timestamp": hdr['time'],
-                        "name_list": name_list,
-                        "type": 'gauge',
-                        "value": val
-                    }
-                    statsd_metrics.append(convert_to_statsd_format(metric, format_names=False))
+                if metric_attrs["type"] == "windowed-map":
+                    statsd_metrics += self.get_rico_windowed_map_metrics(metric_name, metric_attrs, hdr)
+                else:
+                    statsd_metrics += self.get_rico_coda_metrics(metric_name, metric_attrs, hdr)
+        return statsd_metrics
+
+    def get_rico_windowed_map_metrics(self, metric_name, metric_attrs, hdr):
+        statsd_metrics = []
+        #samza.<job-name>.<job-id>.task.<task-name>.rico.<metric-name>.<key>
+        #   NOTE: <metric-name> not escaped - the dots have meaning
+        
+        #Iterate through "data"
+        for (key, val) in metric_attrs["data"].iteritems():
+            name_list = [format_name(n) for n in ('samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'])] \
+                + ['rico', metric_name, key]
+            metric = {
+                "timestamp": hdr['time'],
+                "name_list": name_list,
+                "type": 'gauge',
+                "value": val
+            }
+            statsd_metrics.append(convert_to_statsd_format(metric, format_names=False))
+        return statsd_metrics
+
+    def get_rico_coda_metrics(self, metric_name, metric_attrs, hdr):
+        statsd_metrics = []
+        #samza.<job-name>.<job-id>.task.<task-name>.rico.<metric-name>.<metric-attr>
+        #   NOTE: <metric-name> not escaped - the dots have meaning
+        for (metric_attr, val) in metric_attrs.iteritems():
+            if metric_attr == "type" or metric_attr == "rateUnit":
+                continue
+            name_list = [format_name(n) for n in ('samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'])] \
+                + ['rico', metric_name, metric_attr]
+            metric = {
+                "timestamp": hdr['time'],
+                "name_list": name_list,
+                "type": 'gauge',
+                "value": val
+            }
+            statsd_metrics.append(convert_to_statsd_format(metric, format_names=False))
         return statsd_metrics
 
     def get_task_metrics(self, samza_metrics):
