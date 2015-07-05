@@ -133,14 +133,28 @@ def describe_all(args):
       describe(topic[0], get_zk(args))
 
 def update(topic, partitions, replicas, zk):
-
+  #get the current properties
+  zk=args['-z']
   topic = args['<name>']
-  for topic in load_cfg(args).iteritems():
-    cmd = "%s/bin/kafka-topics --zookeeper %s --alter --topic %s --partitions %s --replication-factor %s" \
-        % (get_kafka_home(), get_zk(args), topic, config[name]['partitions'], config[name]['replicas'])
-  print "Running command: ", cmd
-  run_command(cmd)
+  cmd = "%s/bin/kafka-topics --zookeeper %s --topic %s --describe" \
+    % (get_kafka_home(), zk, topic)
+  output=os.system(cmd)
+  print output
+  splitProperties=output.split("\t")
+  for each in splitProperties: 
+    eachProperty=each.split(":")
 
+  #get properties from yaml and update
+  for topics in load_cfg(args).iteritems():
+      if topics[1]['partitions']!= eachProperty[1][1]
+        cmd = "%s/bin/kafka-topics --zookeeper %s --alter --topic %s --partitions %s" \
+       % (get_kafka_home(),zk, topic, topics[1]['partitions'])
+      elif topics[1]['replicas']!= eachProperty[2][1]
+        cmd = "%s/bin/kafka-topics --zookeeper %s --alter --topic %s --replicas %s" \
+       % (get_kafka_home(),zk, topic, topics[1]['replicas'])
+      elif topics[1]['replicas']!= eachProperty[2][1] && topics[1]['partitions']!= eachProperty[1][1]
+        cmd = "%s/bin/kafka-topics --zookeeper %s --alter --topic %s --partitions %s --replicas %s" \
+       % (get_kafka_home(),zk, topic,topics[1]['partitions'],topics[1]['replicas'])
 
 
 if __name__ == '__main__':
