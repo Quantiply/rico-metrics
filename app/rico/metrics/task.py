@@ -106,8 +106,7 @@ class StatsDTask(BaseTask):
             time_diff_in_secs = (current_time_in_ms - timestamp) / 1000
             # Check if the metric is within the window period
             if self.drop_old_msgs and time_diff_in_secs > self.drop_secs:
-                if self.logger.isDebugEnabled:
-                    self.logger.debug("Time diff %ss is greater than configured maximum %ss...dropping msg" % (time_diff_in_secs, self.drop_secs))
+                self.logger.error("Time diff %ss is greater than configured maximum %ss...dropping msg %s" % (time_diff_in_secs, self.drop_secs, data))
                 self.client.incr(self.get_own_stat_name(msg["source"], "old_messages_dropped"), 1)
             else:
                 if self.logger.isDebugEnabled:
