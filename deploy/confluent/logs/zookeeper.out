@@ -1,0 +1,5 @@
+[2015-07-06 14:20:35,735] WARN Either no config or no quorum defined in config, running  in standalone mode (org.apache.zookeeper.server.quorum.QuorumPeerMain)
+[2015-07-06 14:20:43,004] WARN Connection request from old client /127.0.0.1:61641; will be dropped if server is in r-o mode (org.apache.zookeeper.server.ZooKeeperServer)
+[2015-07-06 14:20:47,030] WARN Connection request from old client /127.0.0.1:61643; will be dropped if server is in r-o mode (org.apache.zookeeper.server.ZooKeeperServer)
+[2015-07-06 14:20:50,856] WARN Connection request from old client /127.0.0.1:61649; will be dropped if server is in r-o mode (org.apache.zookeeper.server.ZooKeeperServer)
+[2015-07-06 14:20:50,924] WARN Connection request from old client /0:0:0:0:0:0:0:1:61650; will be dropped if server is in r-o mode (org.apache.zookeeper.server.ZooKeeperServer)

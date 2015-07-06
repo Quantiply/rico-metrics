@@ -132,30 +132,38 @@ def describe_all(args):
    for topic in load_cfg(args).iteritems():
       describe(topic[0], get_zk(args))
 
-def update(topic, partitions, replicas, zk):
+def update(args):
   #get the current properties
   zk=args['-z']
   topic = args['<name>']
-  cmd = "%s/bin/kafka-topics --zookeeper %s --topic %s --describe" \
-    % (get_kafka_home(), zk, topic)
+  print "in fn"
+  cmd = "/Users/apurva/Documents/Quantiply/rico-metrics/deploy/confluent/bin/kafka-topics --zookeeper %s --topic %s --describe" \
+    % (zk, topic)
+  print "Running : " , cmd
+  run_command(cmd)
+
   output=os.system(cmd)
-  print output
+  output=str(output)
   splitProperties=output.split("\t")
-  for each in splitProperties: 
-    eachProperty=each.split(":")
+  currentTopic=splitProperties[0].split(":")
+  currentPartitions=splitProperties[1].split(":")
+  currentReplicationFactor=splitProperties[2].split(":")
 
   #get properties from yaml and update
   for topics in load_cfg(args).iteritems():
-      if topics[1]['partitions']!= eachProperty[1][1]
-        cmd = "%s/bin/kafka-topics --zookeeper %s --alter --topic %s --partitions %s" \
-       % (get_kafka_home(),zk, topic, topics[1]['partitions'])
-      elif topics[1]['replicas']!= eachProperty[2][1]
-        cmd = "%s/bin/kafka-topics --zookeeper %s --alter --topic %s --replicas %s" \
-       % (get_kafka_home(),zk, topic, topics[1]['replicas'])
-      elif topics[1]['replicas']!= eachProperty[2][1] && topics[1]['partitions']!= eachProperty[1][1]
-        cmd = "%s/bin/kafka-topics --zookeeper %s --alter --topic %s --partitions %s --replicas %s" \
-       % (get_kafka_home(),zk, topic,topics[1]['partitions'],topics[1]['replicas'])
+      requiredPartition=topics[1]['partitions']
+      requiredReplicationFactor=topics[1]['replicas']
 
+  #compare properties
+  print requiredReplicationFactor
+  print requiredPartition
+  print currentPartitions
+  print currentReplicationFactor
+  if requiredPartition!= int(currentPartitions):
+    cmd = "/Users/apurva/Documents/Quantiply/rico-metrics/deploy/confluent/bin/kafka-topics --zookeeper %s --alter --topic %s --partitions %s" \
+      % (zk, topic, requiredPartition)
+  elif requiredReplicationFactor!= int(currentReplicationFactor):
+    print "Replication-factor not same as required Replication Factor"
 
 if __name__ == '__main__':
    args = docopt(__doc__, version='0.0.1')
@@ -164,12 +172,14 @@ if __name__ == '__main__':
    if args['-d']:
       print args
 
-   if get_kafka_home() is None:
-      print "KAFKA_HOME is not defined."
+   #if get_kafka_home() is None:
+   #   print "KAFKA_HOME is not defined."
    elif get_app_home() is None and not args['-c']:
       print "APP_HOME is not defined. You need to define APP_HOME or provide a config file."
    elif args['create-all']:
       create_all(args)
+   elif args['create']:
+      create(args)
    elif args['list']:
       list(args)
    elif args['delete']:
@@ -178,3 +188,6 @@ if __name__ == '__main__':
       describe(args)
    elif args['describe-all']:
       describe_all()
+   elif args['update']:
+      update(args)
+
