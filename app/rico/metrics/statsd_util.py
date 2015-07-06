@@ -24,4 +24,4 @@ def convert_to_statsd_format(metric, format_names=True):
     if format_names:
         name_list = [format_name(n) for n in metric['name_list']]
     name = ".".join(name_list)
-    return { "timestamp": metric["timestamp"], "name": name, "value" : metric["value"], "type" : metric["type"]}
+    return { "timestamp": metric["timestamp"], "name": name, "value" : metric["value"], "type" : metric["type"], "source": metric["source"]}

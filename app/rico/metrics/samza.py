@@ -66,6 +66,7 @@ class SamzaMetricsConverter(object):
             hdr = samza_metrics['header']
             for name in metrics.keys():
                 metric = {
+                    "source": "samza",
                     "timestamp": hdr['time'],
                     "name_list": [
                         'samza', hdr['job-name'], hdr['job-id'], 'container', hdr['container-name'],
@@ -101,6 +102,7 @@ class SamzaMetricsConverter(object):
             name_list = [format_name(n) for n in ('samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'])] \
                 + ['rico', metric_name, key]
             metric = {
+                "source": "samza",
                 "timestamp": hdr['time'],
                 "name_list": name_list,
                 "type": 'gauge',
@@ -119,6 +121,7 @@ class SamzaMetricsConverter(object):
             name_list = [format_name(n) for n in ('samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'])] \
                 + ['rico', metric_name, metric_attr]
             metric = {
+                "source": "samza",
                 "timestamp": hdr['time'],
                 "name_list": name_list,
                 "type": 'gauge',
@@ -141,6 +144,7 @@ class SamzaMetricsConverter(object):
             hdr = samza_metrics['header']
             for name in ['process-calls', 'messages-sent']:
                 metric = {
+                    "source": "samza",
                     "timestamp": hdr['time'],
                     "name_list": ['samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'], name],
                     "type": 'gauge',
@@ -161,6 +165,7 @@ class SamzaMetricsConverter(object):
             hdr = samza_metrics['header']
             for name in metrics.keys():
                 metric = {
+                    "source": "samza",
                     "timestamp": hdr['time'],
                     "name_list": ['samza', hdr['job-name'], hdr['job-id'], 'app-master', 'jvm', name],
                     "type": 'gauge',
@@ -177,6 +182,7 @@ class SamzaMetricsConverter(object):
             hdr = samza_metrics['header']
             for name in ['job-healthy', 'needed-containers', 'running-containers', 'failed-containers', 'app-attempt-id']:
                 metric = {
+                    "source": "samza",
                     "timestamp": hdr['time'],
                     "name_list": ['samza', hdr['job-name'], hdr['job-id'], 'app-master', name],
                     "type": 'gauge',
@@ -194,6 +200,7 @@ class SamzaMetricsConverter(object):
                     parsed = self.parse_kafka_highwater_mark(metric)
                     hdr = samza_metrics['header']
                     metric = {
+                        "source": "samza",
                         "timestamp": hdr['time'],
                         "name_list": [
                             'samza', hdr['job-name'], hdr['job-id'], 'container', hdr['container-name'],

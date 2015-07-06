@@ -49,9 +49,9 @@ class SamzaMetricsConverterTest(unittest.TestCase):
         }
         metrics = self.converter.get_statsd_metrics(data)
         expected = [
-            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.jvm.mem_heap_committed_mb', 'value': 276.5},
-            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.jvm.mem_non_heap_used_mb', 'value': 38.16989},
-            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.jvm.ps_scavenge_gc_time_millis', 'value': 3073}
+            {'source': 'samza', 'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.jvm.mem_heap_committed_mb', 'value': 276.5},
+            {'source': 'samza', 'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.jvm.mem_non_heap_used_mb', 'value': 38.16989},
+            {'source': 'samza', 'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.jvm.ps_scavenge_gc_time_millis', 'value': 3073}
         ]
         self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
         
@@ -79,9 +79,9 @@ class SamzaMetricsConverterTest(unittest.TestCase):
         
         metrics = self.converter.get_statsd_metrics(data)
         expected = [
-            {'timestamp': 1433220776087, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.3.messages_behind_high_watermark', 'value': 987987},
-            {'timestamp': 1433220776087, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.4.messages_behind_high_watermark', 'value': 8},
-            {'timestamp': 1433220776087, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.5.messages_behind_high_watermark', 'value': 4}
+            {'source': 'samza', 'timestamp': 1433220776087, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.3.messages_behind_high_watermark', 'value': 987987},
+            {'source': 'samza', 'timestamp': 1433220776087, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.4.messages_behind_high_watermark', 'value': 8},
+            {'source': 'samza', 'timestamp': 1433220776087, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.5.messages_behind_high_watermark', 'value': 4}
         ]
         self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
 
@@ -113,8 +113,8 @@ class SamzaMetricsConverterTest(unittest.TestCase):
         
         metrics = self.converter.get_statsd_metrics(data)
         expected = [
-            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.task.TaskName_Partition_0.messages_sent', 'value': 5},
-            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.task.TaskName_Partition_0.process_calls', 'value': 99}
+            {'source': 'samza', 'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.task.TaskName_Partition_0.messages_sent', 'value': 5},
+            {'source': 'samza', 'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.task.TaskName_Partition_0.process_calls', 'value': 99}
         ]
         self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
 
@@ -167,27 +167,27 @@ class SamzaMetricsConverterTest(unittest.TestCase):
         }
         metrics = self.converter.get_statsd_metrics(data)
         expected = [
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.app_attempt_id', 'value': 'appattempt_1429549600644_0011_000001'},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.failed_containers', 'value': 0},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.job_healthy', 'value': 1},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.gc_count', 'value': 21},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.gc_time_millis', 'value': 655},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.mem_heap_committed_mb', 'value': 308},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.mem_heap_used_mb', 'value': 103.311905},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.mem_non_heap_committed_mb', 'value': 50.148438},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.mem_non_heap_used_mb', 'value': 49.18598},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.ps_marksweep_gc_count', 'value': 5},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.ps_marksweep_gc_time_millis', 'value': 412},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.ps_scavenge_gc_count', 'value': 16},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.ps_scavenge_gc_time_millis', 'value': 243},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_blocked', 'value': 0},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_new', 'value': 0},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_runnable', 'value': 11},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_terminated', 'value': 0},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_timed_waiting', 'value': 30},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_waiting', 'value': 5},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.needed_containers', 'value': 0},
-            {'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.running_containers', 'value': 1}
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.app_attempt_id', 'value': 'appattempt_1429549600644_0011_000001'},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.failed_containers', 'value': 0},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.job_healthy', 'value': 1},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.gc_count', 'value': 21},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.gc_time_millis', 'value': 655},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.mem_heap_committed_mb', 'value': 308},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.mem_heap_used_mb', 'value': 103.311905},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.mem_non_heap_committed_mb', 'value': 50.148438},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.mem_non_heap_used_mb', 'value': 49.18598},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.ps_marksweep_gc_count', 'value': 5},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.ps_marksweep_gc_time_millis', 'value': 412},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.ps_scavenge_gc_count', 'value': 16},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.ps_scavenge_gc_time_millis', 'value': 243},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_blocked', 'value': 0},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_new', 'value': 0},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_runnable', 'value': 11},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_terminated', 'value': 0},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_timed_waiting', 'value': 30},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.jvm.threads_waiting', 'value': 5},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.needed_containers', 'value': 0},
+            {'source': 'samza', 'timestamp': 1430179447515, 'type': 'gauge', 'name': 'samza.svc_call_join_deploy.1.app_master.running_containers', 'value': 1}
         ]
         self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
 
@@ -231,12 +231,12 @@ class SamzaMetricsConverterTest(unittest.TestCase):
         }
         metrics = self.converter.get_statsd_metrics(data)
         expected = [
-            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.lag-from-origin-ms.75thPercentile', 'value': 3052.0},
-            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.lag-from-origin-ms.95thPercentile', 'value': 4051.0},
-            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.lag-from-origin-ms.mean', 'value': 2354.6792396139635},
-            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.max-lag-by-origin-ms.sit229w80m7-sit:ets:s2:ord-stderr', 'value': 6690721007},
-            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.processed.count', 'value': 81974906},
-            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.processed.meanRate', 'value': 130.25192997193733},
-            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.processed.oneMinuteRate', 'value': 4.4269}
+            {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.lag-from-origin-ms.75thPercentile', 'value': 3052.0},
+            {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.lag-from-origin-ms.95thPercentile', 'value': 4051.0},
+            {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.lag-from-origin-ms.mean', 'value': 2354.6792396139635},
+            {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.max-lag-by-origin-ms.sit229w80m7-sit:ets:s2:ord-stderr', 'value': 6690721007},
+            {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.processed.count', 'value': 81974906},
+            {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.processed.meanRate', 'value': 130.25192997193733},
+            {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.processed.oneMinuteRate', 'value': 4.4269}
         ]
         self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))

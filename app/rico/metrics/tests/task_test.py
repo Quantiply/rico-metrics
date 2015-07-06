@@ -54,7 +54,7 @@ class SamzaMetricsTaskTest(unittest.TestCase):
         
         self.call_handle_msg(data)
         
-        expected = {'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.4.messages_behind_high_watermark', 'value': 0, 'timestamp': 1433220776087L}
+        expected = {'source': 'samza', 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.4.messages_behind_high_watermark', 'value': 0, 'timestamp': 1433220776087L}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
 
@@ -74,37 +74,37 @@ class DruidMetricsTaskTest(unittest.TestCase):
     def test_events(self):
         self.call_handle_msg({"feed": "metrics", "user2": "wikipedia", "service": "middlemanager", "timestamp": "2015-04-22T19:31:20.896Z", "metric": "events/processed", "value": 0, "host": "fb-agg-mm-0.dev.quantezza.com:8089"})
         
-        expected = {'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8089.datasource.wikipedia.events.processed', 'value': 0, 'timestamp': datetime(2015, 4, 22, 19, 31, 20, 896000)}
+        expected = {'source': 'druid', 'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8089.datasource.wikipedia.events.processed', 'value': 0, 'timestamp': datetime(2015, 4, 22, 19, 31, 20, 896000)}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
     def test_persist(self):
         self.call_handle_msg({"feed": "metrics", "user2": "wikipedia", "service": "middlemanager", "timestamp": "2015-04-22T19:31:20.896Z", "metric": "persists/num", "value": 0, "host": "fb-agg-mm-0.dev.quantezza.com:8089"})
         
-        expected = {'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8089.datasource.wikipedia.persists.num', 'value': 0, 'timestamp': datetime(2015, 4, 22, 19, 31, 20, 896000)}
+        expected = {'source': 'druid', 'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8089.datasource.wikipedia.persists.num', 'value': 0, 'timestamp': datetime(2015, 4, 22, 19, 31, 20, 896000)}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
     def test_exec(self):
         self.call_handle_msg({"feed": "metrics", "service": "druid/sit/realtime", "timestamp": "2015-06-02T18:02:24.713Z", "metric": "exec/backlog", "value": 1, "host": "thedude:8101"})
         
-        expected = {'type': 'counter', 'name': 'druid.druid_sit_realtime.thedude_8101.node.exec.backlog', 'value': 1, 'timestamp': datetime(2015, 6, 2, 18, 2, 24, 713000)}
+        expected = {'source': 'druid', 'type': 'counter', 'name': 'druid.druid_sit_realtime.thedude_8101.node.exec.backlog', 'value': 1, 'timestamp': datetime(2015, 6, 2, 18, 2, 24, 713000)}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
     def test_cache(self):
         self.call_handle_msg({"feed": "metrics", "service": "druid/sit/broker", "timestamp": "2015-06-02T18:02:10.372Z", "metric": "cache/delta/hitRate", "value": 0.0, "host": "thedude:8080"})
         
-        expected = {'type': 'counter', 'name': 'druid.druid_sit_broker.thedude_8080.node.cache.delta.hitRate', 'value': 0.0, 'timestamp': datetime(2015, 6, 2, 18, 2, 10, 372000)}
+        expected = {'source': 'druid', 'type': 'counter', 'name': 'druid.druid_sit_broker.thedude_8080.node.cache.delta.hitRate', 'value': 0.0, 'timestamp': datetime(2015, 6, 2, 18, 2, 10, 372000)}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
     def test_query(self):
         self.call_handle_msg({"feed": "metrics", "user6": "false", "user4": "timeseries", "user5": ["2015-06-02T17:00:00.000Z/2015-06-02T18:02:13.800Z"], "user2": "svc_perf", "service": "druid/sit/realtime", "user7": "2 aggs", "timestamp": "2015-06-02T18:02:12.660Z", "metric": "query/time", "value": 4, "user9": "PT62M", "host": "thedude:8101", "user8": "d240be3d-59d0-4c6d-8310-189a281bbdd7"})
         
-        expected = {'type': 'counter', 'name': 'druid.druid_sit_realtime.thedude_8101.datasource.svc_perf.query.time', 'value': 4, 'timestamp': datetime(2015, 6, 2, 18, 2, 12, 660000)}
+        expected = {'source': 'druid', 'type': 'counter', 'name': 'druid.druid_sit_realtime.thedude_8101.datasource.svc_perf.query.time', 'value': 4, 'timestamp': datetime(2015, 6, 2, 18, 2, 12, 660000)}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
     def test_jvm(self):
         self.call_handle_msg({"feed": "metrics", "user2": "PS Perm Gen", "service": "middlemanager", "user1": "nonheap", "timestamp": "2015-04-22T19:31:17.878Z", "metric": "jvm/pool/committed", "value": 83886080, "host": "fb-agg-mm-0.dev.quantezza.com:8189"})
         
-        expected = {'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8189.node.jvm.pool.committed', 'value': 83886080, 'timestamp': datetime(2015, 4, 22, 19, 31, 17, 878000)}
+        expected = {'source': 'druid', 'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8189.node.jvm.pool.committed', 'value': 83886080, 'timestamp': datetime(2015, 4, 22, 19, 31, 17, 878000)}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
 class StatsDTaskTest(unittest.TestCase):
@@ -112,14 +112,23 @@ class StatsDTaskTest(unittest.TestCase):
     def setUp(self):
         self.task = StatsDTask()
         self.task.client = mock.Mock()
+        self.task.drop_secs = 0
         self.task.drop_old_msgs = False
         self.task.prefix = "fake.prefix"
 
     def test_msg(self):
         envelope = mock.Mock()
-        envelope.message = {"type":"gauge","name":"samza.s2_call_parse.1.TaskName_Partition_6.streams.default.dropped.meanRate","value":0.2,"timestamp":1433220836231}
+        envelope.message = {"type":"gauge","source":"test_src","name":"samza.s2_call_parse.1.TaskName_Partition_6.streams.default.dropped.meanRate","value":0.2,"timestamp":1433220836231}
         self.task.handle_msg(envelope, None, None)
         self.task.client.gauge.assert_called_once_with("fake.prefix.samza.s2_call_parse.1.TaskName_Partition_6.streams.default.dropped.meanRate", 0.2)
+        self.task.client.incr.assert_called_once_with("fake.prefix.statsd_push.test_src.messages_sent", 1)
+        
+    def test_drop(self):
+        self.task.drop_old_msgs = True
+        envelope = mock.Mock()
+        envelope.message = {"type":"gauge","source":"test_src","name":"samza.s2_call_parse.1.TaskName_Partition_6.streams.default.dropped.meanRate","value":0.2,"timestamp":1433220836231}
+        self.task.handle_msg(envelope, None, None)
+        self.task.client.incr.assert_called_once_with("fake.prefix.statsd_push.test_src.old_messages_dropped", 1)
 
 if __name__ == '__main__':
     unittest.main()
