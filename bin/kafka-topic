@@ -31,19 +31,21 @@ def get_app_home():
       return None
 
 def get_kafka_home():
-   try:
-      return env['KAFKA_HOME']
-   except:
-      return None
-   
-def load_cfg(args):
-   config_file = "%s/config/topics.yml" % (get_app_home(),)
+  return get_app_home()+"/deploy/confluent"
+
+
+def read_cfg(args):
+   config_file = "%s/bin/topics.yml" % (get_app_home(),)
    if args['-c'] is not None:
       config_file = args['-c']
 
    print "Reading config from %s \n" % (config_file, )
    
-   config = yaml.load(open(config_file, 'r'))
+   return yaml.load(open(config_file, 'r'))
+
+   
+def load_cfg(args):
+   config = read_cfg(args)
    topics = {}
    for topic in config.iteritems():
       name = topic[0]
@@ -79,19 +81,26 @@ def run_command(cmd):
 
 
 def create(args):
-   config = read_cfg(args)
-   name = args['<name>']
-   if not config.has_key(name):
-      print "Topic %s is not available in the config file."
-   else:
-      create_topic(name, config[name]['partitions'], config[name]['replicas'], get_zk(args))
+  print "in create"
+  name = args['<name>']
+  config = read_cfg(args)
+  name = args['<name>']
+  print "in create"
+  if not config.has_key(name):
+      print config
+      print "Topic %s is not available in the config file." %name
+  else:
+     create_topic(name, config[name]['partitions'], config[name]['replicas'], get_zk(args))
+  #create_topic(name, 8, 1, get_zk(args))
+    
 
 def create_topic(topic, partitions, replicas, zk):
-   cmd = "%s/bin/kafka-topics --zookeeper %s --topic %s --create --partitions %s --replication-factor %s" \
-         % (get_kafka_home(), zk, topic, partitions, replicas)
-   print "Running : " , cmd
+  print "in create_topic"
+  cmd = "%s/bin/kafka-topics --zookeeper %s --topic %s --create --partitions %s --replication-factor %s" \
+      % (get_kafka_home(),zk, topic, partitions, replicas)
+  print "Running : " , cmd
 
-   run_command(cmd)
+  run_command(cmd)
    
 def create_all(args):
    for topic in load_cfg(args).iteritems():
@@ -132,38 +141,59 @@ def describe_all(args):
    for topic in load_cfg(args).iteritems():
       describe(topic[0], get_zk(args))
 
+
 def update(args):
   #get the current properties
+  flag=0
   zk=args['-z']
   topic = args['<name>']
-  print "in fn"
-  cmd = "/Users/apurva/Documents/Quantiply/rico-metrics/deploy/confluent/bin/kafka-topics --zookeeper %s --topic %s --describe" \
-    % (zk, topic)
+  print "in update fn"
+  cmd = "%s/bin/kafka-topics --zookeeper %s --topic %s --describe" \
+    % (get_kafka_home(),zk, topic)
   print "Running : " , cmd
   run_command(cmd)
-
-  output=os.system(cmd)
+  proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+  output = proc.stdout.read()
   output=str(output)
-  splitProperties=output.split("\t")
+  print output
+  splitProperties1=output.split("\n")
+  splitProperties=splitProperties1[0].split("\t")
   currentTopic=splitProperties[0].split(":")
-  currentPartitions=splitProperties[1].split(":")
+  currentPartitionCount=splitProperties[1].split(":")
   currentReplicationFactor=splitProperties[2].split(":")
 
+  print currentTopic[1]
+  print currentPartitionCount[1]
+  print currentReplicationFactor[1]
+
+  
   #get properties from yaml and update
   for topics in load_cfg(args).iteritems():
+    if topics[0]==topic:
+      flag=1
       requiredPartition=topics[1]['partitions']
       requiredReplicationFactor=topics[1]['replicas']
+  
+  if flag==0:
+    print "Topic does not exsist"
 
-  #compare properties
-  print requiredReplicationFactor
-  print requiredPartition
-  print currentPartitions
-  print currentReplicationFactor
-  if requiredPartition!= int(currentPartitions):
-    cmd = "/Users/apurva/Documents/Quantiply/rico-metrics/deploy/confluent/bin/kafka-topics --zookeeper %s --alter --topic %s --partitions %s" \
-      % (zk, topic, requiredPartition)
-  elif requiredReplicationFactor!= int(currentReplicationFactor):
-    print "Replication-factor not same as required Replication Factor"
+
+  
+   #compare properties
+  if int(requiredPartition)!= int(currentPartitionCount[1]):
+    cmd1 = "%s/bin/kafka-topics --zookeeper %s --alter --topic %s --partitions %s" \
+      % (get_kafka_home(), zk, topic, requiredPartition)
+    if run_command(cmd1)==0:
+      print "Updated topic"
+  elif int(requiredReplicationFactor)!= int(currentReplicationFactor[1]):
+    print "Replication-factor not same as required Replication Factor" 
+  elif int(requiredPartition) == int(currentPartitionCount[1]) and int(requiredReplicationFactor) == int(currentReplicationFactor[1]):
+    print "Properties do not require update"
+
+
+
+
+
 
 if __name__ == '__main__':
    args = docopt(__doc__, version='0.0.1')
