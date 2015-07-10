@@ -263,7 +263,7 @@ class SamzaMetricsConverterTest(unittest.TestCase):
             {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.lag-from-origin-ms.75thPercentile', 'value': 3052.0},
             {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.lag-from-origin-ms.95thPercentile', 'value': 4051.0},
             {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.lag-from-origin-ms.mean', 'value': 2354.6792396139635},
-            {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.max-lag-by-origin-ms.sit229w80m7-sit:ets:s2:ord-stderr', 'value': 6690721007},
+            {'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.max-lag-by-origin-ms.sit229w80m7_sit_ets_s2_ord_stderr', 'value': 6690721007, 'source': 'samza'},
             {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.processed.count', 'value': 81974906},
             {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.processed.meanRate', 'value': 130.25192997193733},
             {'source': 'samza', 'timestamp': 1430179446591, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.task.TaskName_Partition_6.rico.streams.default.processed.oneMinuteRate', 'value': 4.4269}

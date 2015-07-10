@@ -117,12 +117,11 @@ class SamzaMetricsConverter(object):
     def get_rico_windowed_map_metrics(self, metric_name, metric_attrs, hdr):
         statsd_metrics = []
         #samza.<job-name>.<job-id>.task.<task-name>.rico.<metric-name>.<key>
-        #   NOTE: <metric-name> not escaped - the dots have meaning
         
         #Iterate through "data"
         for (key, val) in metric_attrs["data"].iteritems():
             name_list = [format_name(n) for n in ('samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'])] \
-                + ['rico', metric_name, key]
+                + ['rico', metric_name, format_name(key)]
             metric = {
                 "source": "samza",
                 "timestamp": hdr['time'],
