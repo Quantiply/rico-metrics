@@ -26,6 +26,35 @@ class SamzaMetricsConverterTest(unittest.TestCase):
         result = self.converter.parse_kafka_highwater_mark("kafka-svc.s2.call.raw.wnqcfqaytreaowaa4ovsxa-1-messages-behind-high-watermark")
         self.assertEquals({'stream': 'svc.s2.call.raw.wnqcfqaytreaowaa4ovsxa', 'partition': '1'}, result)
 
+    def test_container_elasticsearch_producer_metrics(self):
+        data = {
+            "header": {
+                "job-id": "1",
+                "samza-version": "0.9.0",
+                "job-name": "deploy-svc-repartition",
+                "host": "thedude",
+                "reset-time": 1433533612817,
+                "container-name": "samza-container-0",
+                "source": "samza-container-0",
+                "time": 1433547788717,
+                "version": "0.0.1"
+            },
+            "metrics": {
+                "org.apache.samza.system.elasticsearch.ElasticsearchSystemProducerMetrics": {
+                    "es-docs-updated": 14,
+                    "es-bulk-send-success": 4,
+                    "es-docs-inserted": 0
+                }
+            }
+        }
+        metrics = self.converter.get_statsd_metrics(data)
+        expected = [
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.es.producer.es_bulk_send_success', 'value': 4, 'source': 'samza'},
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.es.producer.es_docs_inserted', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.es.producer.es_docs_updated', 'value': 14, 'source': 'samza'}
+        ]
+        self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
+
     def test_container_jvm_metrics(self):
         data = {
             "header": {

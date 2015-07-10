@@ -21,6 +21,7 @@ class SamzaMetricsConverter(object):
     TASK_GRP_NAME = 'org.apache.samza.container.TaskInstanceMetrics'
     YARN_APP_MASTER_GRP_NAME = 'org.apache.samza.job.yarn.SamzaAppMasterMetrics'
     JVM_GRP_NAME = 'org.apache.samza.metrics.JvmMetrics'
+    ES_PRODUCER_GRP_NAME = 'org.apache.samza.system.elasticsearch.ElasticsearchSystemProducerMetrics'
     RICO_GRP_NAME = 'com.quantiply.rico'
 
     def parse_kafka_highwater_mark(self, metric):
@@ -56,6 +57,7 @@ class SamzaMetricsConverter(object):
         stats = []
         stats += self.get_container_jvm_metrics(samza_metrics)
         stats += self.get_kafka_consumer_metrics(samza_metrics)
+        stats += self.get_container_elasticsearch_metrics(samza_metrics)
         return stats
 
     def get_container_jvm_metrics(self, samza_metrics):
@@ -71,6 +73,26 @@ class SamzaMetricsConverter(object):
                     "name_list": [
                         'samza', hdr['job-name'], hdr['job-id'], 'container', hdr['container-name'],
                         'jvm', name
+                    ],
+                    "type": 'gauge',
+                    "value": metrics[name]
+                }
+                statsd_metrics.append(convert_to_statsd_format(metric))
+        return statsd_metrics
+        
+    def get_container_elasticsearch_metrics(self, samza_metrics):
+        statsd_metrics = []
+        if self.ES_PRODUCER_GRP_NAME in samza_metrics['metrics']:
+            #samza.<job-name>.<job-id>.container.<container-name>.es.producer.<metric>
+            metrics = samza_metrics['metrics'][self.ES_PRODUCER_GRP_NAME]
+            hdr = samza_metrics['header']
+            for name in metrics.keys():
+                metric = {
+                    "source": "samza",
+                    "timestamp": hdr['time'],
+                    "name_list": [
+                        'samza', hdr['job-name'], hdr['job-id'], 'container', hdr['container-name'],
+                        'es', 'producer', name
                     ],
                     "type": 'gauge',
                     "value": metrics[name]
