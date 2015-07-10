@@ -14,7 +14,7 @@
 #  limitations under the License.
 #
 import re
-from statsd import StatsClient
+from statsd import TCPStatsClient, StatsClient
 import time 
 from datetime import datetime
 import traceback
@@ -87,12 +87,16 @@ class StatsDTask(BaseTask):
     def _init(self, config, context, metric_adaptor):
         statsd_host = config.get("rico.statsd.host")
         statsd_port = config.get("rico.statsd.port")
+        enable_tcp = config.get("rico.tcp.enable", "false").lower() == "true"
         
-        self.client = StatsClient(statsd_host, statsd_port)
         self.drop_secs = int(config.get("rico.drop.secs"))
         self.drop_old_msgs = True
         self.prefix = config.get("rico.statsd.prefix")
+        
         self.logger.info("Drop secs: %s" % self.drop_secs)
+        self.logger.info("Using TCP: %s" % enable_tcp)
+
+        self.client = TCPStatsClient(statsd_host, statsd_port) if enable_tcp else StatsClient(statsd_host, statsd_port)
         
         self.registerDefaultHandler(self.handle_msg)
 

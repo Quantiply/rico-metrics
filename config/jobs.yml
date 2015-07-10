@@ -25,11 +25,13 @@ druid-to-statsd:
 statsd-push:
   common:
     rico:
+      drop.on.error: true
       jython.entrypoint: rico.metrics.task.StatsDTask
-      drop.secs: 60
+      drop.secs: 999999999999
+      tcp.enable: true
       statsd:
-        prefix: RTOI.sit
-        host: localhost
+        prefix: RTOI.sit.7
+        host: statsite.uat.etrade.com
         port: 8125
   
   samza:
