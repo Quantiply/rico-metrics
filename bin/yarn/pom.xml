@@ -26,15 +26,15 @@ under the License.
   </prerequisites>
 
   <groupId>com.quantiply.rico</groupId>
-  <artifactId>metrics</artifactId>
-  <version>0.0.1</version>
+  <artifactId>rico-metrics</artifactId>
+  <version>0.0.8</version>
   <packaging>jar</packaging>
-  <name>YARN package for the Jython Samza project</name>
+  <name>YARN package rico-metrics project</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <samza.version>0.9.0</samza.version>
-    <rico.version>0.0.5</rico.version>
+    <rico.version>0.0.6</rico.version>
     <samza.version>0.9.0</samza.version>
     <kafka.version>0.8.2.1</kafka.version>
     <jackson.version>1.8.5</jackson.version>
@@ -178,8 +178,8 @@ under the License.
         <artifactId>maven-assembly-plugin</artifactId>
         <version>2.3</version>
         <configuration>
-          <finalName>${project.artifactId}</finalName>
-          <appendAssemblyId>false</appendAssemblyId>
+          <!-- <finalName>${project.artifactId}</finalName>
+          <appendAssemblyId>false</appendAssemblyId> -->
           <descriptors>
             <descriptor>src.xml</descriptor>
           </descriptors>

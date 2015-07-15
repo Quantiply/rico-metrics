@@ -197,7 +197,7 @@ def build_package(args):
   # Run stuff
   run_command("mvn package -f $APP_HOME/build/package/%s/pom.xml" % (package_name , ))
 
-  run_command("mv $APP_HOME/build/package/%s/target/*.tar.gz $APP_HOME/build/package/%s/target/%s.tar.gz" % (package_name, package_name, package_name))
+  run_command("cp $APP_HOME/build/package/%s/target/*.tar.gz $APP_HOME/build/package/%s/target/%s.tar.gz" % (package_name, package_name, package_name))
 
   print "-" * 100
   print "Package : %s/build/package/%s/target/%s.tar.gz" % (get_app_home(), package_name, package_name)
