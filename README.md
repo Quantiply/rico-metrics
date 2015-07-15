@@ -11,10 +11,14 @@ Getting started
         rico build jar
         rico test
         
-Building a Package For Deployment
+Building a Package
 ---
         rico install-deps
-        rico package metrics
+        rico package
+        
+Deploying to Maven repository
+---
+        rico deploy
    
 Samza Metrics to StatsD
 ---
