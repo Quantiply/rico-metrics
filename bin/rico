@@ -21,7 +21,8 @@ Usage:
   rico samza <name> [--env=<env>]
   rico yarn <name> [--env=<env>] [--http=<http_url>]
   rico build jar 
-  rico package <name>
+  rico package
+  rico deploy
   rico install-deps
   rico test
 Options:
@@ -179,29 +180,26 @@ def samza(args):
 
   run_command(cmd)
 
-def build_package(args):
-  package_name = args["<name>"]
- 
+def copy_yarn_files():
   print "-" * 100
-  print "Copying files to %s/build/package/%s" % (get_app_home(), package_name)
+  print "Copying files to %s/build/package" % (get_app_home())
   print "-" * 100
 
-  copy = "rm -rf $APP_HOME/build/package/%s && " % (package_name, )
-  copy += "mkdir -p $APP_HOME/build/package/%s/lib && " % (package_name, )
-  copy += "cp $APP_HOME/bin/yarn/*.xml $APP_HOME/build/package/%s/ && " % (package_name, )
-  copy += "cp -r $APP_HOME/{config,app} $APP_HOME/build/package/%s/ && " % (package_name, )
-  copy += "cp -r $APP_HOME/lib/{rico,vendor} $APP_HOME/build/package/%s/lib/ " % (package_name, ) 
+  copy = "rm -rf $APP_HOME/build/package/ && "
+  copy += "mkdir -p $APP_HOME/build/package/lib && "
+  copy += "cp $APP_HOME/bin/yarn/*.xml $APP_HOME/build/package/ && "
+  copy += "cp -r $APP_HOME/{config,app} $APP_HOME/build/package/ && "
+  copy += "cp -r $APP_HOME/lib/{rico,vendor} $APP_HOME/build/package/lib/ "
 
   run_command(copy)
 
-  # Run stuff
-  run_command("mvn package -f $APP_HOME/build/package/%s/pom.xml" % (package_name , ))
+def deploy_package(args):
+  copy_yarn_files()
+  run_command("mvn deploy -f $APP_HOME/build/package/pom.xml")
 
-  run_command("cp $APP_HOME/build/package/%s/target/*.tar.gz $APP_HOME/build/package/%s/target/%s.tar.gz" % (package_name, package_name, package_name))
-
-  print "-" * 100
-  print "Package : %s/build/package/%s/target/%s.tar.gz" % (get_app_home(), package_name, package_name)
-  print "-" * 100
+def build_package(args):
+  copy_yarn_files()
+  run_command("mvn package -f $APP_HOME/build/package/pom.xml")
 
 def yarn(args):
   processor = args["<name>"]
@@ -283,6 +281,8 @@ if __name__ == '__main__':
       build_jar(args)
     elif args["package"]:
       build_package(args)
+    elif args["deploy"]:
+      deploy_package(args)
     elif args["yarn"]:
       yarn(args)
     elif args["install-deps"]:
