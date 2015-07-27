@@ -43,7 +43,8 @@ class SamzaMetricsConverterTest(unittest.TestCase):
                 "org.apache.samza.system.elasticsearch.ElasticsearchSystemProducerMetrics": {
                     "es-docs-updated": 14,
                     "es-bulk-send-success": 4,
-                    "es-docs-inserted": 0
+                    "es-docs-inserted": 0,
+                    "es-version-conflicts": 7
                 }
             }
         }
@@ -51,7 +52,8 @@ class SamzaMetricsConverterTest(unittest.TestCase):
         expected = [
             {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.es.producer.es_bulk_send_success', 'value': 4, 'source': 'samza'},
             {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.es.producer.es_docs_inserted', 'value': 0, 'source': 'samza'},
-            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.es.producer.es_docs_updated', 'value': 14, 'source': 'samza'}
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.es.producer.es_docs_updated', 'value': 14, 'source': 'samza'},
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.es.producer.es_version_conflicts', 'value': 7, 'source': 'samza'}
         ]
         self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
 
