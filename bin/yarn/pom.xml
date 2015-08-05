@@ -27,7 +27,7 @@ under the License.
 
   <groupId>com.quantiply.rico</groupId>
   <artifactId>rico-metrics</artifactId>
-  <version>0.0.8</version>
+  <version>0.0.9</version>
   <packaging>jar</packaging>
   <name>YARN package rico-metrics project</name>
 

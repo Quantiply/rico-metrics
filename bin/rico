@@ -249,7 +249,7 @@ def yarn(args):
 
   run_command(run)
   
-def build_jar(args):
+def build_jar():
   # if args["local"]:
     # cmd =  "mvn -f $APP_HOME/bin/local-pom.xml clean package "
     # cmd += "-DbuildDir=$APP_HOME/build/maven/local  "
@@ -278,7 +278,7 @@ if __name__ == '__main__':
     elif args["samza"] :
       samza(args)
     elif args["build"] and args["jar"]:
-      build_jar(args)
+      build_jar()
     elif args["package"]:
       build_package(args)
     elif args["deploy"]:
