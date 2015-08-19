@@ -21,7 +21,7 @@ Deploying to Maven repository
         rico deploy
         
 Fetching from Maven repository
-         mvn dependency:get -DremoteRepositories=http://s3.amazonaws.com/artifacts.quantezza.com/release -Dartifact=com.quantiply.rico:rico-metrics:0.0.8:tar.gz:dist
+         mvn dependency:get -DremoteRepositories=http://s3.amazonaws.com/artifacts.quantezza.com/release -Dartifact=com.quantiply.rico:rico-metrics:0.0.9:tar.gz:dist
    
 Samza Metrics to StatsD
 ---
