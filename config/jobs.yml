@@ -20,7 +20,7 @@ druid-to-statsd:
     job.name: druid-to-statsd
     task:
       class: com.quantiply.samza.JythonTask
-      inputs: kafka.sys.samza_metrics
+      inputs: kafka.sys.druid_metrics
 
 statsd-push:
   common:

@@ -57,4 +57,5 @@ Druid Metrics to StatsD
 ---
 0. Test with Command Line Runner
 
-        cat data/druid-metrics.json | rico local druid-to-statsd
+        cat data/druid-metrics.json | rico cmdline druid-to-statsd
+        rico samza druid-to-statsd
