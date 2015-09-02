@@ -3,14 +3,15 @@
 """Rico job runner.
 
 Usage:
+  rico install-deps
+  rico build
+  rico test
+  rico jobs
   rico cmdline <name> [--env=<env>]
   rico samza <name> [--env=<env>]
   rico yarn <name> [--env=<env>] [--http=<http_url>]
-  rico build
   rico package
-  rico install-deps
-  rico test
-  rico jobs
+  rico deploy
 
 Options:
   -h --help     Show this screen.
@@ -255,6 +256,8 @@ if __name__ == '__main__':
     build_jar(args)
   elif args["package"]:
     build_package(args)
+  elif args["deploy"]:
+    deploy_package(args)
   elif args["yarn"]:
     yarn(args)
   elif args["install-deps"]:

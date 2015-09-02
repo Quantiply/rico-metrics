@@ -43,15 +43,9 @@ Samza Metrics to StatsD
     
 2. Test with YARN
 
-		grid install all #only need to do this once
-      	rm -rf /tmp/kafka-logs/ && rm -rf /tmp/zookeeper/
-      	grid start all
-      	create_topics.sh
-    	load_topics.sh
-		grid start yarn
-		rico yarn samza-to-statsd
-		grid stop yarn
-		grid stop all
+        grid start yarn
+        rico yarn samza-to-statsd
+        grid stop yarn
 
 Druid Metrics to StatsD
 ---
