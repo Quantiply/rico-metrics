@@ -17,7 +17,6 @@
     <jackson.version>1.8.5</jackson.version>
   </properties>
 
-
   <repositories>
     <repository>
       <id>aws-release</id>
@@ -33,6 +32,19 @@
       </snapshots>
     </repository>
   </repositories>
+  
+  <distributionManagement>
+      <repository>
+          <id>aws-release</id>
+          <name>AWS Release Repository</name>
+          <url>s3://artifacts.quantezza.com/release</url>
+      </repository>
+      <snapshotRepository>
+          <id>aws-snapshot</id>
+          <name>AWS Snapshot Repository</name>
+          <url>s3://artifacts.quantezza.com/snapshot</url>
+      </snapshotRepository>
+  </distributionManagement>
 
   <profiles>
     <profile>
