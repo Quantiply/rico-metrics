@@ -70,10 +70,7 @@ install_confluent() {
   install confluent $DOWNLOAD_CONFLUENT confluent-1.0
   patch -p1 -d $DEPLOY_ROOT_DIR/confluent < $BASE_DIR/bin/confluent/fix_log_path.patch
   patch -p1 -d $DEPLOY_ROOT_DIR/confluent < $BASE_DIR/bin/confluent/zk-stop.patch
-  patch -p1 -d $DEPLOY_ROOT_DIR/confluent < $BASE_DIR/bin/confluent/schema-registry-port.patch
   patch -p1 -d $DEPLOY_ROOT_DIR/confluent < $BASE_DIR/bin/confluent/daemon.patch
-  #rhoover: disable auto topic creation
-  # echo "auto.create.topics.enable=false" >> $DEPLOY_ROOT_DIR/confluent/etc/kafka/server.properties
 }
 
 install() {

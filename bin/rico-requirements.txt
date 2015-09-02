@@ -1,0 +1,5 @@
+docopt
+pyyaml
+tabulate
+git+http://github.com/bufordtaylor/python-texttable
+

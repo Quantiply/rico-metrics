@@ -1,39 +1,27 @@
 #!/usr/bin/env python
-#
-# Copyright 2014-2015 Quantiply Corporation. All rights reserved.
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#
-"""Rico superpowers.
+
+"""Rico job runner.
 
 Usage:
-  rico local [-d] <name> [--env=<env>] [--full]
+  rico cmdline <name> [--env=<env>]
   rico samza <name> [--env=<env>]
   rico yarn <name> [--env=<env>] [--http=<http_url>]
-  rico build jar 
+  rico build
   rico package
-  rico deploy
   rico install-deps
   rico test
+  rico jobs
+
 Options:
   -h --help     Show this screen.
   --version     Show version.
-  -d            Show debug info.
 """
 
+from __future__ import print_function
 from docopt import docopt
 import subprocess
-import os
+import os.path
+import sys
 from os import environ as env
 import yaml
 import collections
@@ -41,11 +29,22 @@ import collections
 def get_default_cfg(runner):
   default_file = "%s/config/default.yml" % (get_app_home(), )
   default = yaml.load(open(default_file, "r"))
-  return flatten(default[runner])
+  cfg = {}
+  if default.has_key("common"):
+    cfg = flatten(default["common"])
+  cfg.update(flatten(default[runner]))
+  return cfg
+
+def get_jobs_cfg():
+  jobs_file = "%s/config/jobs.yml" % (get_app_home(), )
+  return yaml.load(open(jobs_file, "r"))
+
+def list_jobs(args):
+  jobs = get_jobs_cfg()
+  print("\n".join(jobs.keys()))
 
 def is_processor_valid(processor):
-  jobs_file = "%s/config/jobs.yml" % (get_app_home(), )
-  jobs = yaml.load(open(jobs_file, "r"))
+  jobs = get_jobs_cfg()
   return jobs.has_key(processor)
 
 def get_processor_cfg(runner, processor):
@@ -60,11 +59,11 @@ def get_processor_cfg(runner, processor):
   
 def get_env_cfg(runner, env):
   env_file = "%s/config/%s.yml" % (get_app_home(), env)
-  env = yaml.load(open(env_file, "r"))
-  if env.has_key(runner):
-    return flatten(env[runner])
-  else:
-    return {}
+  if os.path.exists(env_file):
+    env = yaml.load(open(env_file, "r"))
+    if env.has_key(runner):
+      return flatten(env[runner])
+  return {}
   
 def cfg_to_file(runner_config, build_file):
   # Replace $app_home with full path
@@ -95,20 +94,16 @@ def flatten(d, parent_key='', sep='.'):
   
 def get_app_home():
   try:
-    return env['APP_HOME']
+    return env['RICO_APP_HOME']
   except:
     return None
 
 def run_command(cmd):
-  # print "Running : ", cmd
-  # print " "
-  output = subprocess.call(cmd, shell=True)
-  if not output == 0:
-    raise RuntimeError(output)
-  # print " " 
+  print(cmd,file=sys.stderr)
+  subprocess.check_call(cmd, shell=True)
     
 def install_deps(args):
-  cmd = "pip install --target %s/lib/vendor/ -r jython-requirements.txt" % (get_app_home(), )
+  cmd = "pip install --target %s/lib/vendor/ -r app/requirements.txt" % (get_app_home(), )
   run_command(cmd)
 
 def get_common_cfg(runner, processor):
@@ -116,9 +111,9 @@ def get_common_cfg(runner, processor):
   cfg.update(get_processor_cfg(runner,processor))
   
 
-def local(args):
+def cmdline(args):
   processor = args["<name>"]
-  runner = "local"
+  runner = "cmdline"
   env = "dev"
   if args["--env"]:
     env = args["--env"]
@@ -126,7 +121,7 @@ def local(args):
   # Get and merge props
 
   if not is_processor_valid(processor):
-    print "%s not found in jobs.yml" % (processor, )
+    print("%s not found in jobs.yml" % processor)
     return
 
   cfg = get_default_cfg(runner)
@@ -137,21 +132,11 @@ def local(args):
   build_file = "%s/build/%s/%s.properties" % (get_app_home(), runner, processor)
   cfg_to_file(cfg, build_file)
   
-  # Run the command
-  output = 1 # Message only
-  if args["--full"]:
-    ouput = 0
-  cmd = "java -Dlog4j.configuration=file:///$APP_HOME/config/log4j.properties "
-  cmd += "-jar $APP_HOME/lib/samza-*.jar "
+  cmd = "java -Dlog4j.configuration=file:///$RICO_APP_HOME/config/log4j.properties "
+  cmd += "-jar $RICO_APP_HOME/lib/*.jar "
   cmd += build_file
-  cmd += " " + str(output)
 
   run_command(cmd)
-
-def test(args):
-    cmd = "java -Dlog4j.configuration=file:///$APP_HOME/config/log4j.properties "
-    cmd += "-cp $APP_HOME/lib/samza-*.jar org.python.util.jython $APP_HOME/bin/nosetests.py  $APP_HOME/app"
-    run_command(cmd)
 
 def samza(args):
   processor = args["<name>"]
@@ -163,7 +148,7 @@ def samza(args):
   # Get and merge props
   cfg = get_default_cfg(runner)
   if not is_processor_valid(processor):
-    print "%s not found in jobs.yml" % (processor, )
+    print("%s not found in jobs.yml" % processor)
     return
 
   cfg.update(get_processor_cfg(runner,processor))
@@ -173,33 +158,32 @@ def samza(args):
   build_file = "%s/build/%s/%s.properties" % (get_app_home(), runner, processor)
   cfg_to_file(cfg, build_file)
   
-  cmd = "java -Dlog4j.configuration=file:///$APP_HOME/config/log4j.properties -Dsamza.container.name=samza-application-master "
-  cmd += "-cp $APP_HOME/lib/*.jar org.apache.samza.job.JobRunner "
+  cmd = "java -Dlog4j.configuration=file:///$RICO_APP_HOME/config/log4j.properties "
+  cmd += "-cp $RICO_APP_HOME/lib/*.jar org.apache.samza.job.JobRunner "
   cmd += "--config-factory=org.apache.samza.config.factories.PropertiesConfigFactory --config-path=file://"
   cmd += build_file
 
   run_command(cmd)
 
 def copy_yarn_files():
-  print "-" * 100
-  print "Copying files to %s/build/package" % (get_app_home())
-  print "-" * 100
+  print("-" * 100)
+  print("Copying files to %s/build/package" % get_app_home())
+  print("-" * 100)
 
-  copy = "rm -rf $APP_HOME/build/package/ && "
-  copy += "mkdir -p $APP_HOME/build/package/lib && "
-  copy += "cp $APP_HOME/bin/yarn/*.xml $APP_HOME/build/package/ && "
-  copy += "cp -r $APP_HOME/{config,app} $APP_HOME/build/package/ && "
-  copy += "cp -r $APP_HOME/lib/{rico,vendor} $APP_HOME/build/package/lib/ "
+  copy = "rm -rf $RICO_APP_HOME/build/package/ && "
+  copy += "mkdir -p $RICO_APP_HOME/build/package/lib && "
+  copy += "cp -r $RICO_APP_HOME/{config,app} $RICO_APP_HOME/build/package/ && "
+  copy += "cp -r $RICO_APP_HOME/lib/{rico,vendor} $RICO_APP_HOME/build/package/lib/ "
 
   run_command(copy)
 
 def deploy_package(args):
   copy_yarn_files()
-  run_command("mvn deploy -f $APP_HOME/build/package/pom.xml")
+  run_command("mvn -f $RICO_APP_HOME/bin/pom.xml -DbuildDir=$RICO_APP_HOME/build/maven/package -Dpkg=yarn clean deploy")
 
 def build_package(args):
   copy_yarn_files()
-  run_command("mvn package -f $APP_HOME/build/package/pom.xml")
+  run_command("mvn -f $RICO_APP_HOME/bin/pom.xml -DbuildDir=$RICO_APP_HOME/build/maven/package -Dpkg=yarn clean package")
 
 def yarn(args):
   processor = args["<name>"]
@@ -211,7 +195,7 @@ def yarn(args):
   # Merge samza and yarn props
   cfg = get_default_cfg("samza")
   if not is_processor_valid(processor):
-    print "%s not found in jobs.yml" % (processor, )
+    print("%s not found in jobs.yml" % processor)
     return
 
   cfg.update(get_default_cfg("yarn"))
@@ -224,11 +208,11 @@ def yarn(args):
 
   # Copy stuff to the build dir
   
-  copy = "rm -rf $APP_HOME/build/yarn/%s && " % (processor, )
-  copy += "mkdir -p $APP_HOME/build/yarn/%s/lib && " % (processor, )
-  copy += "cp $APP_HOME/bin/yarn/*.xml $APP_HOME/build/yarn/%s/ && " % (processor, )
-  copy += "cp -r $APP_HOME/{config,app} $APP_HOME/build/yarn/%s/ && " % (processor, )
-  copy += "cp -r $APP_HOME/lib/{vendor,rico} $APP_HOME/build/yarn/%s/lib/ " % (processor, ) 
+  copy = "rm -rf $RICO_APP_HOME/build/yarn/%s && " % (processor, )
+  copy += "mkdir -p $RICO_APP_HOME/build/yarn/%s/lib && " % (processor, )
+  copy += "cp $RICO_APP_HOME/bin/yarn/*.xml $RICO_APP_HOME/build/yarn/%s/ && " % (processor, )
+  copy += "cp -r $RICO_APP_HOME/{config,app} $RICO_APP_HOME/build/yarn/%s/ && " % (processor, )
+  copy += "cp -r $RICO_APP_HOME/lib/{vendor,rico} $RICO_APP_HOME/build/yarn/%s/lib/ " % (processor, ) 
 
   run_command(copy)
 
@@ -238,54 +222,42 @@ def yarn(args):
   cfg_to_file(cfg, build_file)
   
   # Run stuff
-  run_command("mvn package -f $APP_HOME/build/yarn/%s/pom.xml" % (processor, ))
+  run_command("mvn package -f $RICO_APP_HOME/build/yarn/%s/pom.xml" % (processor, ))
 
-  run = "mkdir $APP_HOME/build/yarn/%s/target/exploded && " % (processor, )
-  run += "mv $APP_HOME/build/yarn/%s/target/*.tar.gz $APP_HOME/build/yarn/%s/target/%s.tar.gz && " % (processor, processor, processor)
-  run += "tar -xzvf $APP_HOME/build/yarn/%s/target/%s.tar.gz -C $APP_HOME/build/yarn/%s/target/exploded && " % (processor, processor, processor )
-  run += "$APP_HOME/build/yarn/%s/target/exploded/bin/run-job.sh " % (processor, )
+  run = "mkdir $RICO_APP_HOME/build/yarn/%s/target/exploded && " % (processor, )
+  run += "mv $RICO_APP_HOME/build/yarn/%s/target/*.tar.gz $RICO_APP_HOME/build/yarn/%s/target/%s.tar.gz && " % (processor, processor, processor)
+  run += "tar -xzvf $RICO_APP_HOME/build/yarn/%s/target/%s.tar.gz -C $RICO_APP_HOME/build/yarn/%s/target/exploded && " % (processor, processor, processor )
+  run += "$RICO_APP_HOME/build/yarn/%s/target/exploded/bin/run-job.sh " % (processor, )
   run += "--config-factory=org.apache.samza.config.factories.PropertiesConfigFactory "
-  run += "--config-path=file://$APP_HOME/build/yarn/%s/target/exploded/config/%s.properties" % (processor, processor)
+  run += "--config-path=file://$RICO_APP_HOME/build/yarn/%s/target/exploded/config/%s.properties" % (processor, processor)
 
   run_command(run)
   
-def build_jar():
-  # if args["local"]:
-    # cmd =  "mvn -f $APP_HOME/bin/local-pom.xml clean package "
-    # cmd += "-DbuildDir=$APP_HOME/build/maven/local  "
-    # cmd += "-Dproject.build.directory=$APP_HOME/build/maven/local "
-    # cmd += "-DsourceDirectory=$APP_HOME/config/schema &&"
-    # cmd += "cp $APP_HOME/build/maven/local/local-*.jar $APP_HOME/lib/"
-    # run_command(cmd)
+def build_jar(args):
+  run_command("mvn -f $RICO_APP_HOME/bin/pom.xml -DbuildDir=$RICO_APP_HOME/build/maven/jar -Dpkg=jar clean package")
+  run_command("bash -O extglob -c 'cp $RICO_APP_HOME/build/maven/jar/!(original-*).jar $RICO_APP_HOME/lib/'")
 
-
-  cmd =  "mvn -f $APP_HOME/bin/samza-pom.xml clean package "
-  cmd += "-DbuildDir=$APP_HOME/build/maven/jar  && "
-  cmd += "cp $APP_HOME/build/maven/jar/samza-*.jar $APP_HOME/lib/"
+def test(args):
+  cmd = "java -Dlog4j.configuration=file:///$RICO_APP_HOME/config/log4j.properties "
+  cmd += "-cp $RICO_APP_HOME/lib/*.jar org.python.util.jython $RICO_APP_HOME/bin/nosetests.py  $RICO_APP_HOME/app"
   run_command(cmd)
 
-  # else:
-    # print "Command not valid."
-
 if __name__ == '__main__':
-    args = docopt(__doc__, version='0.0.1')
-    # print(args)
+  args = docopt(__doc__, version='0.0.1')
 
-    if get_app_home() is None:
-      print "APP_HOME is undefined."
-    elif args["local"] :
-      local(args)
-    elif args["samza"] :
-      samza(args)
-    elif args["build"] and args["jar"]:
-      build_jar()
-    elif args["package"]:
-      build_package(args)
-    elif args["deploy"]:
-      deploy_package(args)
-    elif args["yarn"]:
-      yarn(args)
-    elif args["install-deps"]:
-      install_deps(args)
-    elif args["test"]:
-      test(args)
+  if get_app_home() is None:
+    print("RICO_APP_HOME is undefined.")
+  elif args["cmdline"] :
+    cmdline(args)
+  elif args["samza"] :
+    samza(args)
+  elif args["build"]:
+    build_jar(args)
+  elif args["package"]:
+    build_package(args)
+  elif args["yarn"]:
+    yarn(args)
+  elif args["install-deps"]:
+    install_deps(args)
+  elif args["test"]:
+    test(args)

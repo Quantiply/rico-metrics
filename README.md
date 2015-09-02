@@ -5,10 +5,10 @@ Getting started
 ---    
 1. Setup the env by running
  
-        pip install -r requirements.txt
-        source bin/set_env.bash
+        pip install -r bin/rico-requirements.txt
+        . bin/activate
         rico install-deps
-        rico build jar
+        rico build
         rico test
         
 Building a Package
@@ -27,7 +27,7 @@ Samza Metrics to StatsD
 ---
 0. Test with Command Line Runner
 
-        cat data/samza-metrics.json | rico local samza-to-statsd
+        cat data/samza-metrics.json | rico cmdline samza-to-statsd
  
 1. Test with Samza ThreadJobFactory
     
