@@ -46,6 +46,8 @@ class SamzaMetricsTask(BaseTask):
 
         
 class DruidMetricsTask(BaseTask):
+    DS_PREFIXES = ['events', 'rows', 'failed', 'persist', 'query']
+    NODE_PREFIXES = ['exec', 'cache', 'jvm']
     
     def _init(self, config, context, metric_adaptor):
         self.output = self.getSystemStream("out")
@@ -54,28 +56,37 @@ class DruidMetricsTask(BaseTask):
     def handle_msg(self, data, collector, coord):
         try:
             msg = data.message
-            DS_PREFIXES = ['events', 'rows', 'failed', 'persist', 'query']
-            NODE_PREFIXES = ['exec', 'cache', 'jvm']
-            if any([msg["metric"].startswith(prefix) for prefix in DS_PREFIXES]):
-                #druid.<node-type>.<node>.datasource.<datasource>.<metric>
+            if msg['feed'] == 'alerts':
+                #druid.<node-type>.<node>.alerts.<severity>
                 metric = {
                     "source": "druid",
                     "timestamp": datetime.strptime(msg["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ"),
-                    "name_list": ['druid', msg["service"], msg["host"], 'datasource', msg["user2"]] + msg["metric"].split('/'),
+                    "name_list": ['druid', msg["service"], msg["host"], 'alerts', msg['severity']],
                     "type": 'counter',
-                    "value": msg["value"]
+                    "value": 1
                 }
                 collector.send(OutgoingMessageEnvelope(self.output, convert_to_statsd_format(metric)))
-            elif any([msg["metric"].startswith(prefix) for prefix in NODE_PREFIXES]):
-                #druid.<node-type>.<node>.node.<metric>
-                metric = {
-                    "source": "druid",
-                    "timestamp": datetime.strptime(msg["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ"),
-                    "name_list": ['druid', msg["service"], msg["host"], 'node'] + msg["metric"].split('/'),
-                    "type": 'counter',
-                    "value": msg["value"]
-                }
-                collector.send(OutgoingMessageEnvelope(self.output, convert_to_statsd_format(metric)))
+            elif msg['feed'] == 'metrics':
+              if any([msg["metric"].startswith(prefix) for prefix in self.DS_PREFIXES]):
+                  #druid.<node-type>.<node>.datasource.<datasource>.<metric>
+                  metric = {
+                      "source": "druid",
+                      "timestamp": datetime.strptime(msg["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ"),
+                      "name_list": ['druid', msg["service"], msg["host"], 'datasource', msg["user2"]] + msg["metric"].split('/'),
+                      "type": 'counter',
+                      "value": msg["value"]
+                  }
+                  collector.send(OutgoingMessageEnvelope(self.output, convert_to_statsd_format(metric)))
+              elif any([msg["metric"].startswith(prefix) for prefix in self.NODE_PREFIXES]):
+                  #druid.<node-type>.<node>.node.<metric>
+                  metric = {
+                      "source": "druid",
+                      "timestamp": datetime.strptime(msg["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ"),
+                      "name_list": ['druid', msg["service"], msg["host"], 'node'] + msg["metric"].split('/'),
+                      "type": 'counter',
+                      "value": msg["value"]
+                  }
+                  collector.send(OutgoingMessageEnvelope(self.output, convert_to_statsd_format(metric)))
         except Exception, e:
             if (self.logger.isInfoEnabled):
                 self.logger.info("Error while processing record" + str(data) + ": " + e.message)

@@ -107,6 +107,12 @@ class DruidMetricsTaskTest(unittest.TestCase):
         expected = {'source': 'druid', 'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8189.node.jvm.pool.committed', 'value': 83886080, 'timestamp': datetime(2015, 4, 22, 19, 31, 17, 878000)}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
+    def test_failure(self):
+        self.call_handle_msg({"feed": "alerts", "severity": "component-failure", "service": "druid/sit/coordinator", "timestamp": "2015-09-02T00:57:08.071Z", "host": "thedude:8082", "data": {"class": "io.druid.server.coordinator.rules.LoadRule"}, "description": "Tier[_default_tier] has no servers! Check your cluster configuration!"})
+        
+        expected = {'source': 'druid', 'type': 'counter', 'name': 'druid.druid_sit_coordinator.thedude_8082.alerts.component_failure', 'value': 1, 'timestamp': datetime(2015, 9, 2, 0, 57, 8, 71000)}
+        self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
+
 class StatsDTaskTest(unittest.TestCase):
     
     def setUp(self):
