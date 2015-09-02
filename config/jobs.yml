@@ -30,8 +30,8 @@ statsd-push:
       drop.secs: 999999999999
       tcp.enable: true
       statsd:
-        prefix: RTOI.sit.7
-        host: statsite.uat.etrade.com
+        prefix: test
+        host: localhost
         port: 8125
   
   samza:

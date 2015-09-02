@@ -1,3 +1,0 @@
-samza:
-  systems.kafka.consumer.zookeeper.connect: 127.0.0.1:2181
-  systems.kafka.producer.bootstrap.servers: 127.0.0.1:9092

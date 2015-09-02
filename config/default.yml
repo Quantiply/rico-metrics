@@ -1,22 +1,26 @@
-local:
+common:
     rico:
-        string-serde.class: com.quantiply.samza.serde.JSONStringSerde
-        drop.on.error: true
+        schema.registry.url: "http://localhost:8081"
+        drop.on.error: false
+        streams.dropped-messages: sys.samza_dropped_msgs
     task:
         class: com.quantiply.samza.JythonTask
+
+cmdline:
+    rico:
+        string-serde.class: com.quantiply.samza.serde.JSONStringSerde
 
 samza:
     #Job
     job.factory.class: org.apache.samza.job.local.ThreadJobFactory
 
     #Task
-    task:
-      class: com.quantiply.rico.samza.SamzaRunner
-      checkpoint.factory: org.apache.samza.checkpoint.kafka.KafkaCheckpointManagerFactory
-      checkpoint.system: kafka
-      checkpoint.replication.factor: 1
-      consumer.batch.size: 1
-    
+    task.checkpoint.factory: org.apache.samza.checkpoint.kafka.KafkaCheckpointManagerFactory
+    task.checkpoint.system: kafka
+    # Normally, this would be 3, but we have only one broker.
+    task.checkpoint.replication.factor: 1
+    task.consumer.batch.size: 1000
+
     # Metrics
     metrics.reporters: snapshot,jmx
     metrics.reporter.snapshot.class: org.apache.samza.metrics.reporter.MetricsSnapshotReporterFactory
@@ -24,17 +28,18 @@ samza:
     metrics.reporter.jmx.class: org.apache.samza.metrics.reporter.JmxReporterFactory
 
     # Serializers
-    serializers.registry.json.class: org.apache.samza.serializers.JsonSerdeFactory
     serializers.registry.byte.class: org.apache.samza.serializers.ByteSerdeFactory
+    serializers.registry.string.class: org.apache.samza.serializers.StringSerdeFactory
+    serializers.registry.json.class: org.apache.samza.serializers.JsonSerdeFactory
     serializers.registry.metrics.class: org.apache.samza.serializers.MetricsSnapshotSerdeFactory
 
-    # Systems
+    # Kafka System
     systems.kafka.samza.factory: org.apache.samza.system.kafka.KafkaSystemFactory
-    systems.kafka.samza.key.serde: byte
+    systems.kafka.samza.key.serde: string
     systems.kafka.samza.msg.serde: json
     #Serde for metrics topic
     systems.kafka.streams.sys.samza_metrics.samza.msg.serde: metrics
-    #Important for testing so that you can load data first
+    #rhoover: when checkpoint is not present, read oldest data possible
     systems.kafka.samza.offset.default: oldest
     systems.kafka.consumer.zookeeper.connect: localhost:2181/
     systems.kafka.producer.bootstrap.servers: localhost:9092
