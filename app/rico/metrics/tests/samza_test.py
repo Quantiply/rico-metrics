@@ -149,6 +149,105 @@ class SamzaMetricsConverterTest(unittest.TestCase):
         ]
         self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
 
+    def test_kv_metrics(self):
+        data = {
+            "header": {
+                "job-id": "1",
+                "samza-version": "0.9.0",
+                "job-name": "foo",
+                "host": "thedude",
+                "reset-time": 1433220701927,
+                "container-name": "samza-container-0",
+                "source": "TaskName-Partition 0",
+                "time": 1433220702299,
+                "version": "0.0.1"
+            },
+            "metrics": {
+                "org.apache.samza.storage.kv.KeyValueStoreMetrics": {
+                    "localstore-flushes": 417,
+                    "localstore-alls": 0,
+                    "localstore-deletes": 0,
+                    "localstore-puts": 11158,
+                    "localstore-bytes-read": 9466370,
+                    "localstore-ranges": 0,
+                    "localstore-gets": 3932,
+                    "localstore-bytes-written": 27026294
+                },
+                "org.apache.samza.storage.kv.CachedStoreMetrics": {
+                    "localstore-flushes": 417,
+                    "localstore-cache-size": 1000,
+                    "localstore-alls": 0,
+                    "localstore-deletes": 0,
+                    "localstore-flush-batch-size": 11158,
+                    "localstore-puts": 84482,
+                    "localstore-ranges": 0,
+                    "localstore-gets": 78239,
+                    "localstore-dirty-count": 0,
+                    "localstore-cache-hits": 74307
+                },
+                "org.apache.samza.storage.kv.KeyValueStorageEngineMetrics": {
+                    "localstore-flushes": 413,
+                    "localstore-alls": 0,
+                    "localstore-deletes": 0,
+                    "localstore-puts": 84482,
+                    "localstore-messages-restored": 0,
+                    "localstore-ranges": 0,
+                    "localstore-gets": 78239,
+                    "localstore-messages-bytes": 0
+                },
+                "org.apache.samza.storage.kv.SerializedKeyValueStoreMetrics": {
+                    "localstore-flushes": 417,
+                    "localstore-alls": 0,
+                    "localstore-bytes-deserialized": 9466370,
+                    "localstore-deletes": 0,
+                    "localstore-puts": 11158,
+                    "localstore-ranges": 0,
+                    "localstore-gets": 3932,
+                    "localstore-bytes-serialized": 27082664
+                }
+            }
+        }
+        
+        metrics = self.converter.get_statsd_metrics(data)
+        print(sorted(metrics, key=lambda m: m['name']))
+        expected = [
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.cached_store.alls', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.cached_store.deletes', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.cached_store.flushes', 'value': 417, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.cached_store.gets', 'value': 78239, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.cached_store.puts', 'value': 84482, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.cached_store.ranges', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.engine.alls', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.engine.deletes', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.engine.flushes', 'value': 413, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.engine.gets', 'value': 78239, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.engine.puts', 'value': 84482, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.engine.ranges', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.serialized_store.alls', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.serialized_store.deletes', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.serialized_store.flushes', 'value': 417, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.serialized_store.gets', 'value': 3932, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.serialized_store.puts', 'value': 11158, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.serialized_store.ranges', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.store.alls', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.store.deletes', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.store.flushes', 'value': 417, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.store.gets', 'value': 3932, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.store.puts', 'value': 11158, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore.store.ranges', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore_bytes.serialized_store.deserialized', 'value': 9466370, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore_bytes.serialized_store.serialized', 'value': 27082664, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore_bytes.store.read', 'value': 9466370, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore_bytes.store.written', 'value': 27026294, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore_cache.cached_store.hits', 'value': 74307, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore_cache.cached_store.size', 'value': 1000, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore_dirty.cached_store.count', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore_flush_batch.cached_store.size', 'value': 11158, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore_messages.engine.bytes', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.foo.1.task.TaskName_Partition_0.kv.localstore_messages.engine.restored', 'value': 0, 'source': 'samza'}
+        ]
+        self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
+
     def test_app_master_metrics(self):
         data = {
             "header": {

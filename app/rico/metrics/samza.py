@@ -22,6 +22,12 @@ class SamzaMetricsConverter(object):
     YARN_APP_MASTER_GRP_NAME = 'org.apache.samza.job.yarn.SamzaAppMasterMetrics'
     JVM_GRP_NAME = 'org.apache.samza.metrics.JvmMetrics'
     ES_PRODUCER_GRP_NAME = 'org.apache.samza.system.elasticsearch.ElasticsearchSystemProducerMetrics'
+    KV_GRP_NAMES = {
+      'org.apache.samza.storage.kv.KeyValueStoreMetrics': 'store',
+      'org.apache.samza.storage.kv.CachedStoreMetrics': 'cached-store',
+      'org.apache.samza.storage.kv.KeyValueStorageEngineMetrics': 'engine',
+      'org.apache.samza.storage.kv.SerializedKeyValueStoreMetrics': 'serialized-store'
+    }
     RICO_GRP_NAME = 'com.quantiply.rico'
 
     def parse_kafka_highwater_mark(self, metric):
@@ -154,6 +160,7 @@ class SamzaMetricsConverter(object):
     def get_task_metrics(self, samza_metrics):
         stats = []
         stats += self.get_task_builtin_metrics(samza_metrics)
+        stats += self.get_task_kv_store_metrics(samza_metrics)
         stats += self.get_rico_metrics(samza_metrics)
         return stats
     
@@ -172,6 +179,27 @@ class SamzaMetricsConverter(object):
                     "value": metrics[name]
                 }
                 statsd_metrics.append(convert_to_statsd_format(metric))
+        return statsd_metrics
+
+    def get_task_kv_store_metrics(self, samza_metrics):
+        statsd_metrics = []
+        
+        for (grp_name, kv_grp_metric) in self.KV_GRP_NAMES.iteritems():
+          if grp_name in samza_metrics['metrics']:
+            #samza.<job-name>.<job-id>.task.<task-name>.kv.<store>.<kv_grp_metric>.<metric>
+            metrics = samza_metrics['metrics'][grp_name]
+            hdr = samza_metrics['header']
+            for name in metrics.keys():
+              #Split store_name from metric
+              (store_name, metric) = name.rsplit('-', 1)
+              metric = {
+                  "source": "samza",
+                  "timestamp": hdr['time'],
+                  "name_list": ['samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'], 'kv', store_name, kv_grp_metric, metric],
+                  "type": 'gauge',
+                  "value": metrics[name]
+              }
+              statsd_metrics.append(convert_to_statsd_format(metric))
         return statsd_metrics
 
     def get_app_master_metrics(self, samza_metrics):
