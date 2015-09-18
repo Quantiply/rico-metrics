@@ -115,7 +115,7 @@ class StatsDTask(BaseTask):
         try:
             msg = data.message
             name = "%s.%s" % (self.prefix, msg["name"] )
-            timestamp = msg["timestamp"]
+            timestamp = int(msg["timestamp"])
             metric_type = msg["type"]
             current_time_in_ms = int(round(time.time() * 1000))
             time_diff_in_secs = (current_time_in_ms - timestamp) / 1000

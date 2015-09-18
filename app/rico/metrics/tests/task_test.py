@@ -128,6 +128,13 @@ class StatsDTaskTest(unittest.TestCase):
         self.task.handle_msg(envelope, None, None)
         self.task.client.gauge.assert_called_once_with("fake.prefix.samza.s2_call_parse.1.TaskName_Partition_6.streams.default.dropped.meanRate", 0.2)
         self.task.client.incr.assert_called_once_with("fake.prefix.statsd_push.test_src.messages_sent", 1)
+
+    def test_msg_with_string_timestamp(self):
+        envelope = mock.Mock()
+        envelope.message = {"type":"gauge","source":"test_src","name":"samza.s2_call_parse.1.TaskName_Partition_6.streams.default.dropped.meanRate","value":0.2,"timestamp":u"1433220836231"}
+        self.task.handle_msg(envelope, None, None)
+        self.task.client.gauge.assert_called_once_with("fake.prefix.samza.s2_call_parse.1.TaskName_Partition_6.streams.default.dropped.meanRate", 0.2)
+        self.task.client.incr.assert_called_once_with("fake.prefix.statsd_push.test_src.messages_sent", 1)
         
     def test_drop(self):
         self.task.drop_old_msgs = True
