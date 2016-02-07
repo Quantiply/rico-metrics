@@ -96,24 +96,38 @@ class SamzaMetricsConverter(object):
     def get_container_elasticsearch_http_metrics(self, samza_metrics):
         statsd_metrics = []
         if self.ES_HTTP_PRODUCER_GRP_NAME in samza_metrics['metrics']:
-            #samza.<job-name>.<job-id>.container.<container-name>.eshttp.producer.<metric>
             metrics = samza_metrics['metrics'][self.ES_HTTP_PRODUCER_GRP_NAME]
             hdr = samza_metrics['header']
+            partial_name_list = ['samza', hdr['job-name'], hdr['job-id'], 'container', hdr['container-name'], 'eshttp', 'producer']
             for name in metrics.keys():
                 if isinstance(metrics[name], dict):
-                    pass
+                    #samza.<job-name>.<job-id>.container.<container-name>.eshttp.producer.<metric-name>.<metric_attr>
+                    statsd_metrics += self.get_rico_coda_metrics(format_name(name), metrics[name], hdr, partial_name_list)
                 else:
+                    #samza.<job-name>.<job-id>.container.<container-name>.eshttp.producer.<metric>
                     metric = {
                         "source": "samza",
                         "timestamp": hdr['time'],
-                        "name_list": [
-                            'samza', hdr['job-name'], hdr['job-id'], 'container', hdr['container-name'],
-                            'eshttp', 'producer', name
-                        ],
+                        "name_list": partial_name_list + [name],
                         "type": 'gauge',
                         "value": metrics[name]
                     }
                     statsd_metrics.append(convert_to_statsd_format(metric))
+        return statsd_metrics
+
+    def get_rico_coda_metrics(self, metric_name, metric_attrs, hdr, partial_name_list):
+        statsd_metrics = []
+        for (metric_attr, val) in metric_attrs.iteritems():
+            if metric_attr == "type" or metric_attr == "rateUnit":
+                continue
+            metric = {
+                "source": "samza",
+                "timestamp": hdr['time'],
+                "name_list": [format_name(n) for n in partial_name_list] + [metric_name, metric_attr],
+                "type": 'gauge',
+                "value": val
+            }
+            statsd_metrics.append(convert_to_statsd_format(metric, format_names=False))
         return statsd_metrics
 
     def get_container_elasticsearch_native_metrics(self, samza_metrics):
@@ -147,7 +161,7 @@ class SamzaMetricsConverter(object):
                 if metric_attrs["type"] == "windowed-map":
                     statsd_metrics += self.get_rico_windowed_map_metrics(metric_name, metric_attrs, hdr)
                 else:
-                    statsd_metrics += self.get_rico_coda_metrics(metric_name, metric_attrs, hdr)
+                    statsd_metrics += self.get_rico_coda_task_metrics(metric_name, metric_attrs, hdr)
         return statsd_metrics
 
     def get_rico_windowed_map_metrics(self, metric_name, metric_attrs, hdr):
@@ -168,7 +182,7 @@ class SamzaMetricsConverter(object):
             statsd_metrics.append(convert_to_statsd_format(metric, format_names=False))
         return statsd_metrics
 
-    def get_rico_coda_metrics(self, metric_name, metric_attrs, hdr):
+    def get_rico_coda_task_metrics(self, metric_name, metric_attrs, hdr):
         statsd_metrics = []
         #samza.<job-name>.<job-id>.task.<task-name>.rico.<metric-name>.<metric-attr>
         #   NOTE: <metric-name> not escaped - the dots have meaning
