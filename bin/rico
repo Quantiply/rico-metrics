@@ -5,6 +5,7 @@
 Usage:
   rico install-deps
   rico build
+  rico clean
   rico test
   rico jobs
   rico cmdline <name> [--env=<env>]
@@ -58,7 +59,7 @@ def get_processor_cfg(runner, processor):
   if jobs[processor].has_key(runner):
     cfg.update(flatten(jobs[processor][runner]))
   return cfg
-  
+
 def get_env_cfg(runner, env):
   env_file = "%s/config/%s.yml" % (get_app_home(), env)
   if os.path.exists(env_file):
@@ -66,7 +67,7 @@ def get_env_cfg(runner, env):
     if env.has_key(runner):
       return flatten(env[runner])
   return {}
-  
+
 def cfg_to_file(runner_config, build_file):
   # Replace $app_home with full path
   runner_config = {x[0]: rewrite_vars(str(x[1])) for x in runner_config.iteritems()}
@@ -93,7 +94,7 @@ def flatten(d, parent_key='', sep='.'):
     else:
       items.append((new_key, v))
   return dict(items)
-  
+
 def get_app_home():
   try:
     return env['RICO_APP_HOME']
@@ -103,7 +104,7 @@ def get_app_home():
 def run_command(cmd):
   print(cmd,file=sys.stderr)
   subprocess.check_call(cmd, shell=True)
-    
+
 def install_deps(args):
   cmd = "pip install --target %s/lib/vendor/ -r app/requirements.txt" % (get_app_home(), )
   run_command(cmd)
@@ -111,7 +112,7 @@ def install_deps(args):
 def get_common_cfg(runner, processor):
   cfg = get_default_cfg(runner)
   cfg.update(get_processor_cfg(runner,processor))
-  
+
 
 def cmdline(args):
   processor = args["<name>"]
@@ -119,7 +120,7 @@ def cmdline(args):
   env = "dev"
   if args["--env"]:
     env = args["--env"]
-  
+
   # Get and merge props
 
   if not is_processor_valid(processor):
@@ -133,7 +134,7 @@ def cmdline(args):
   # Write config file.
   build_file = "%s/build/%s/%s.properties" % (get_app_home(), runner, processor)
   cfg_to_file(cfg, build_file)
-  
+
   cmd = "java -Dlog4j.configuration=file:///$RICO_APP_HOME/config/log4j.properties "
   cmd += "-jar $RICO_APP_HOME/lib/*.jar "
   cmd += build_file
@@ -146,7 +147,7 @@ def samza(args):
   env = "dev"
   if args["--env"]:
     env = args["--env"]
-  
+
   # Get and merge props
   cfg = get_default_cfg(runner)
   if not is_processor_valid(processor):
@@ -159,7 +160,7 @@ def samza(args):
   # Write config file.
   build_file = "%s/build/%s/%s.properties" % (get_app_home(), runner, processor)
   cfg_to_file(cfg, build_file)
-  
+
   cmd = "java -Dlog4j.configuration=file:///$RICO_APP_HOME/config/log4j.properties "
   cmd += "-cp $RICO_APP_HOME/lib/*.jar org.apache.samza.job.JobRunner "
   cmd += "--config-factory=org.apache.samza.config.factories.PropertiesConfigFactory --config-path=file://"
@@ -179,7 +180,7 @@ def yarn(args):
   env = "dev"
   if args["--env"]:
     env = args["--env"]
-  
+
   # Merge samza and yarn props
   cfg = get_default_cfg("samza")
   if not is_processor_valid(processor):
@@ -187,20 +188,20 @@ def yarn(args):
     return
 
   cfg.update(get_default_cfg("yarn"))
-  
+
   cfg.update(get_processor_cfg("samza",processor))
   cfg.update(get_processor_cfg("yarn",processor))
-  
+
   cfg.update(get_env_cfg("samza", env))
   cfg.update(get_env_cfg("yarn", env))
 
   # Copy stuff to the build dir
-  
+
   copy = "rm -rf $RICO_APP_HOME/build/yarn/%s && " % (processor, )
   copy += "mkdir -p $RICO_APP_HOME/build/yarn/%s/lib && " % (processor, )
   copy += "cp $RICO_APP_HOME/bin/yarn/*.xml $RICO_APP_HOME/build/yarn/%s/ && " % (processor, )
   copy += "cp -r $RICO_APP_HOME/{config,app} $RICO_APP_HOME/build/yarn/%s/ && " % (processor, )
-  copy += "cp -r $RICO_APP_HOME/lib/{vendor,rico} $RICO_APP_HOME/build/yarn/%s/lib/ " % (processor, ) 
+  copy += "cp -r $RICO_APP_HOME/lib/{vendor,rico} $RICO_APP_HOME/build/yarn/%s/lib/ " % (processor, )
 
   run_command(copy)
 
@@ -208,7 +209,7 @@ def yarn(args):
   build_file = "%s/build/%s/%s/config/%s.properties" % (get_app_home(),"yarn", processor, processor)
   cfg["yarn.package.path"] = "file://%s/build/yarn/%s/target/%s.tar.gz" % (get_app_home(), processor, processor )
   cfg_to_file(cfg, build_file)
-  
+
   # Run stuff
   run_command("mvn package -f $RICO_APP_HOME/build/yarn/%s/pom.xml" % (processor, ))
 
@@ -220,10 +221,13 @@ def yarn(args):
   run += "--config-path=file://$RICO_APP_HOME/build/yarn/%s/target/exploded/config/%s.properties" % (processor, processor)
 
   run_command(run)
-  
+
 def build_jar(args):
   run_command("mvn -f $RICO_APP_HOME/bin/pom.xml -DbuildDir=$RICO_APP_HOME/build/maven/jar -Dpkg=jar clean package")
   run_command("bash -O extglob -c 'cp $RICO_APP_HOME/build/maven/jar/!(original-*).jar $RICO_APP_HOME/lib/'")
+
+def clean(args):
+  run_command("rm -rf build && rm lib/*.jar")
 
 def test(args):
   cmd = "java -Dlog4j.configuration=file:///$RICO_APP_HOME/config/log4j.properties "
@@ -253,3 +257,5 @@ if __name__ == '__main__':
     test(args)
   elif args["jobs"]:
     list_jobs(args)
+  elif args["clean"]:
+    clean(args)
