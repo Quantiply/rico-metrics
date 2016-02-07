@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2015 Quantiply Corporation. All rights reserved.
+# Copyright 2014-2016 Quantiply Corporation. All rights reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -21,7 +21,8 @@ class SamzaMetricsConverter(object):
     TASK_GRP_NAME = 'org.apache.samza.container.TaskInstanceMetrics'
     YARN_APP_MASTER_GRP_NAME = 'org.apache.samza.job.yarn.SamzaAppMasterMetrics'
     JVM_GRP_NAME = 'org.apache.samza.metrics.JvmMetrics'
-    ES_PRODUCER_GRP_NAME = 'org.apache.samza.system.elasticsearch.ElasticsearchSystemProducerMetrics'
+    ES_NATIVE_PRODUCER_GRP_NAME = 'org.apache.samza.system.elasticsearch.ElasticsearchSystemProducerMetrics'
+    ES_HTTP_PRODUCER_GRP_NAME = 'com.quantiply.samza.system.elasticsearch.ElasticsearchSystemProducerMetrics'
     KV_GRP_NAMES = {
       'org.apache.samza.storage.kv.KeyValueStoreMetrics': 'store',
       'org.apache.samza.storage.kv.CachedStoreMetrics': 'cached-store',
@@ -36,12 +37,12 @@ class SamzaMetricsConverter(object):
         if not result:
             raise Exception("Failed to parse Kafka highwater mark metric")
         return {'stream': result.group(1), 'partition': result.group(2)}
-        
-    
+
+
     def get_statsd_metrics(self, samza_metrics):
         """
         Format data for statsd topic
-    
+
         Args:
           samza_metrics (dict): python dict from Samza metrics JSON msg
 
@@ -58,7 +59,7 @@ class SamzaMetricsConverter(object):
             return self.get_container_metrics(samza_metrics)
 
         return self.get_task_metrics(samza_metrics)
-    
+
     def get_container_metrics(self, samza_metrics):
         stats = []
         stats += self.get_container_jvm_metrics(samza_metrics)
@@ -85,12 +86,41 @@ class SamzaMetricsConverter(object):
                 }
                 statsd_metrics.append(convert_to_statsd_format(metric))
         return statsd_metrics
-        
+
     def get_container_elasticsearch_metrics(self, samza_metrics):
+        stats = []
+        stats += self.get_container_elasticsearch_native_metrics(samza_metrics)
+        stats += self.get_container_elasticsearch_http_metrics(samza_metrics)
+        return stats
+
+    def get_container_elasticsearch_http_metrics(self, samza_metrics):
         statsd_metrics = []
-        if self.ES_PRODUCER_GRP_NAME in samza_metrics['metrics']:
+        if self.ES_HTTP_PRODUCER_GRP_NAME in samza_metrics['metrics']:
+            #samza.<job-name>.<job-id>.container.<container-name>.eshttp.producer.<metric>
+            metrics = samza_metrics['metrics'][self.ES_HTTP_PRODUCER_GRP_NAME]
+            hdr = samza_metrics['header']
+            for name in metrics.keys():
+                if isinstance(metrics[name], dict):
+                    pass
+                else:
+                    metric = {
+                        "source": "samza",
+                        "timestamp": hdr['time'],
+                        "name_list": [
+                            'samza', hdr['job-name'], hdr['job-id'], 'container', hdr['container-name'],
+                            'eshttp', 'producer', name
+                        ],
+                        "type": 'gauge',
+                        "value": metrics[name]
+                    }
+                    statsd_metrics.append(convert_to_statsd_format(metric))
+        return statsd_metrics
+
+    def get_container_elasticsearch_native_metrics(self, samza_metrics):
+        statsd_metrics = []
+        if self.ES_NATIVE_PRODUCER_GRP_NAME in samza_metrics['metrics']:
             #samza.<job-name>.<job-id>.container.<container-name>.es.producer.<metric>
-            metrics = samza_metrics['metrics'][self.ES_PRODUCER_GRP_NAME]
+            metrics = samza_metrics['metrics'][self.ES_NATIVE_PRODUCER_GRP_NAME]
             hdr = samza_metrics['header']
             for name in metrics.keys():
                 metric = {
@@ -105,7 +135,7 @@ class SamzaMetricsConverter(object):
                 }
                 statsd_metrics.append(convert_to_statsd_format(metric))
         return statsd_metrics
-    
+
     def get_rico_metrics(self, samza_metrics):
         statsd_metrics = []
         if self.RICO_GRP_NAME in samza_metrics['metrics']:
@@ -123,7 +153,7 @@ class SamzaMetricsConverter(object):
     def get_rico_windowed_map_metrics(self, metric_name, metric_attrs, hdr):
         statsd_metrics = []
         #samza.<job-name>.<job-id>.task.<task-name>.rico.<metric-name>.<key>
-        
+
         #Iterate through "data"
         for (key, val) in metric_attrs["data"].iteritems():
             name_list = [format_name(n) for n in ('samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'])] \
@@ -163,7 +193,7 @@ class SamzaMetricsConverter(object):
         stats += self.get_task_kv_store_metrics(samza_metrics)
         stats += self.get_rico_metrics(samza_metrics)
         return stats
-    
+
     def get_task_builtin_metrics(self, samza_metrics):
         statsd_metrics = []
         if self.TASK_GRP_NAME in samza_metrics['metrics']:
@@ -183,7 +213,7 @@ class SamzaMetricsConverter(object):
 
     def get_task_kv_store_metrics(self, samza_metrics):
         statsd_metrics = []
-        
+
         for (grp_name, kv_grp_metric) in self.KV_GRP_NAMES.iteritems():
           if grp_name in samza_metrics['metrics']:
             #samza.<job-name>.<job-id>.task.<task-name>.kv.<store>.<kv_grp_metric>.<metric>
@@ -239,7 +269,7 @@ class SamzaMetricsConverter(object):
                 }
                 statsd_metrics.append(convert_to_statsd_format(metric))
         return statsd_metrics
-        
+
     def get_kafka_consumer_metrics(self, samza_metrics):
         statsd_metrics = []
         if self.KAFKA_SYSTEM_CONSUMER_GRP_NAME in samza_metrics["metrics"]:
@@ -261,4 +291,3 @@ class SamzaMetricsConverter(object):
                     }
                     statsd_metrics.append(convert_to_statsd_format(metric))
         return statsd_metrics
-

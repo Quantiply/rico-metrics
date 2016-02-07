@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2015 Quantiply Corporation. All rights reserved.
+# Copyright 2014-2016 Quantiply Corporation. All rights reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -57,6 +57,97 @@ class SamzaMetricsConverterTest(unittest.TestCase):
         ]
         self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
 
+    def test_container_elasticsearch_http_producer_metrics(self):
+        data = {
+            "header": {
+                "job-id": "1",
+                "samza-version": "0.9.0",
+                "job-name": "deploy-svc-repartition",
+                "host": "thedude",
+                "reset-time": 1433533612817,
+                "container-name": "samza-container-0",
+                "source": "samza-container-0",
+                "time": 1433547788717,
+                "version": "0.0.1"
+            },
+            "metrics": {
+                "com.quantiply.samza.system.elasticsearch.ElasticsearchSystemProducerMetrics": {
+                  "es-bulk-send-wait-ms": {
+                    "75thPercentile": 164,
+                    "98thPercentile": 164,
+                    "min": 8,
+                    "median": 8,
+                    "95thPercentile": 164,
+                    "99thPercentile": 164,
+                    "max": 164,
+                    "mean": 85.41501096850321,
+                    "999thPercentile": 164,
+                    "type": "histogram",
+                    "stdDev": 77.99780630141484
+                  },
+                  "es-bulk-send-trigger-max-actions": 1,
+                  "es-lag-from-receive-ms": {
+                    "75thPercentile": 675,
+                    "98thPercentile": 677,
+                    "min": 167,
+                    "median": 173,
+                    "95thPercentile": 677,
+                    "99thPercentile": 677,
+                    "max": 677,
+                    "mean": 306.81746184974213,
+                    "999thPercentile": 677,
+                    "type": "histogram",
+                    "stdDev": 220.75271582756383
+                  },
+                  "es-bulk-send-trigger-flush-cmd": 0,
+                  "es-inserts": 7,
+                  "es-updates": 12,
+                  "es-bulk-send-batch-size": {
+                    "75thPercentile": 20,
+                    "98thPercentile": 20,
+                    "min": 7,
+                    "median": 7,
+                    "95thPercentile": 20,
+                    "99thPercentile": 20,
+                    "max": 20,
+                    "mean": 13.451250914041934,
+                    "999thPercentile": 20,
+                    "type": "histogram",
+                    "stdDev": 6.49981719178457
+                  },
+                  "es-bulk-send-trigger-max-interval": 1,
+                  "es-lag-from-origin-ms": {
+                    "75thPercentile": 0,
+                    "98thPercentile": 0,
+                    "min": 0,
+                    "median": 0,
+                    "95thPercentile": 0,
+                    "99thPercentile": 0,
+                    "max": 0,
+                    "mean": 0,
+                    "999thPercentile": 0,
+                    "type": "histogram",
+                    "stdDev": 0
+                  },
+                  "es-bulk-send-success": 2,
+                  "es-version-conflicts": 5,
+                  "es-deletes": 3
+                }
+            }
+        }
+        metrics = self.converter.get_statsd_metrics(data)
+        expected = [
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.eshttp.producer.es_bulk_send_success', 'value': 2, 'source': 'samza'},
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.eshttp.producer.es_bulk_send_trigger_flush_cmd', 'value': 0, 'source': 'samza'},
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.eshttp.producer.es_bulk_send_trigger_max_actions', 'value': 1, 'source': 'samza'},
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.eshttp.producer.es_bulk_send_trigger_max_interval', 'value': 1, 'source': 'samza'},
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.eshttp.producer.es_deletes', 'value': 3, 'source': 'samza'},
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.eshttp.producer.es_inserts', 'value': 7, 'source': 'samza'},
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.eshttp.producer.es_updates', 'value': 12, 'source': 'samza'},
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.eshttp.producer.es_version_conflicts', 'value': 5, 'source': 'samza'},
+        ]
+        self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
+
     def test_container_jvm_metrics(self):
         data = {
             "header": {
@@ -85,7 +176,7 @@ class SamzaMetricsConverterTest(unittest.TestCase):
             {'source': 'samza', 'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.jvm.ps_scavenge_gc_time_millis', 'value': 3073}
         ]
         self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
-        
+
     def test_kafka_consumer_lag(self):
         data = {
             "header": {
@@ -107,7 +198,7 @@ class SamzaMetricsConverterTest(unittest.TestCase):
                 }
             }
         }
-        
+
         metrics = self.converter.get_statsd_metrics(data)
         expected = [
             {'source': 'samza', 'timestamp': 1433220776087, 'type': 'gauge', 'name': 'samza.s2_call_parse.1.container.samza_container_0.kafka_consumer.stream.svc_s2_call_raw_wnqcfqaytreaowaa4ovsxa.partition.3.messages_behind_high_watermark', 'value': 987987},
@@ -141,7 +232,7 @@ class SamzaMetricsConverterTest(unittest.TestCase):
                 }
             }
         }
-        
+
         metrics = self.converter.get_statsd_metrics(data)
         expected = [
             {'source': 'samza', 'timestamp': 1433220702299, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.task.TaskName_Partition_0.messages_sent', 'value': 5},
@@ -207,7 +298,7 @@ class SamzaMetricsConverterTest(unittest.TestCase):
                 }
             }
         }
-        
+
         metrics = self.converter.get_statsd_metrics(data)
         print(sorted(metrics, key=lambda m: m['name']))
         expected = [
