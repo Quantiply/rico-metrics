@@ -14,7 +14,6 @@
 #  limitations under the License.
 #
 import unittest
-import mock
 from rico.metrics.samza import SamzaMetricsConverter
 
 class SamzaMetricsConverterTest(unittest.TestCase):

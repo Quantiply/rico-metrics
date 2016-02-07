@@ -42,7 +42,8 @@ def get_jobs_cfg():
 
 def list_jobs(args):
   jobs = get_jobs_cfg()
-  print("\n".join(jobs.keys()))
+  if jobs:
+    print("\n".join(jobs.keys()))
 
 def is_processor_valid(processor):
   jobs = get_jobs_cfg()
@@ -166,24 +167,10 @@ def samza(args):
 
   run_command(cmd)
 
-def copy_yarn_files():
-  print("-" * 100)
-  print("Copying files to %s/build/package" % get_app_home())
-  print("-" * 100)
-
-  copy = "rm -rf $RICO_APP_HOME/build/package/ && "
-  copy += "mkdir -p $RICO_APP_HOME/build/package/lib && "
-  copy += "cp -r $RICO_APP_HOME/{config,app} $RICO_APP_HOME/build/package/ && "
-  copy += "cp -r $RICO_APP_HOME/lib/{rico,vendor} $RICO_APP_HOME/build/package/lib/ "
-
-  run_command(copy)
-
 def deploy_package(args):
-  copy_yarn_files()
   run_command("mvn -f $RICO_APP_HOME/bin/pom.xml -DbuildDir=$RICO_APP_HOME/build/maven/package -Dpkg=yarn clean deploy")
 
 def build_package(args):
-  copy_yarn_files()
   run_command("mvn -f $RICO_APP_HOME/bin/pom.xml -DbuildDir=$RICO_APP_HOME/build/maven/package -Dpkg=yarn clean package")
 
 def yarn(args):

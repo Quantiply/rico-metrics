@@ -1,3 +1,6 @@
 nose
 docopt
 pyyaml
+mock
+setuptools
+statsd
