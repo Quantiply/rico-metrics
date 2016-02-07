@@ -3,9 +3,9 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <groupId>com.quantiply.rico</groupId>
-  <artifactId>rico-metrics</artifactId>
+  <artifactId>metrics</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.14-SNAPSHOT</version>
+  <version>0.0.1-SNAPSHOT</version>
   <modelVersion>4.0.0</modelVersion>
 
   <properties>
@@ -16,6 +16,7 @@
     <kafka.version>0.8.2.1</kafka.version>
     <jackson.version>1.8.5</jackson.version>
   </properties>
+
 
   <repositories>
     <repository>
@@ -32,19 +33,6 @@
       </snapshots>
     </repository>
   </repositories>
-
-  <distributionManagement>
-      <repository>
-          <id>aws-release</id>
-          <name>AWS Release Repository</name>
-          <url>s3://artifacts.quantezza.com/release</url>
-      </repository>
-      <snapshotRepository>
-          <id>aws-snapshot</id>
-          <name>AWS Snapshot Repository</name>
-          <url>s3://artifacts.quantezza.com/snapshot</url>
-      </snapshotRepository>
-  </distributionManagement>
 
   <profiles>
     <profile>
