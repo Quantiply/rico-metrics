@@ -116,6 +116,10 @@ class SamzaMetricsConverter(object):
         return statsd_metrics
 
     def get_rico_coda_metrics(self, metric_name, metric_attrs, hdr, partial_name_list):
+        """
+        partial_name_list is the list of names for the metric except the metric_name and metric_attr
+        NOTE: metric_name is not escaped - dots will have meaning
+        """
         statsd_metrics = []
         for (metric_attr, val) in metric_attrs.iteritems():
             if metric_attr == "type" or metric_attr == "rateUnit":
@@ -183,23 +187,9 @@ class SamzaMetricsConverter(object):
         return statsd_metrics
 
     def get_rico_coda_task_metrics(self, metric_name, metric_attrs, hdr):
-        statsd_metrics = []
         #samza.<job-name>.<job-id>.task.<task-name>.rico.<metric-name>.<metric-attr>
-        #   NOTE: <metric-name> not escaped - the dots have meaning
-        for (metric_attr, val) in metric_attrs.iteritems():
-            if metric_attr == "type" or metric_attr == "rateUnit":
-                continue
-            name_list = [format_name(n) for n in ('samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'])] \
-                + ['rico', metric_name, metric_attr]
-            metric = {
-                "source": "samza",
-                "timestamp": hdr['time'],
-                "name_list": name_list,
-                "type": 'gauge',
-                "value": val
-            }
-            statsd_metrics.append(convert_to_statsd_format(metric, format_names=False))
-        return statsd_metrics
+        partial_name_list = ['samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'], 'rico']
+        return self.get_rico_coda_metrics(metric_name, metric_attrs, hdr, partial_name_list)
 
     def get_task_metrics(self, samza_metrics):
         stats = []
