@@ -115,25 +115,6 @@ class SamzaMetricsConverter(object):
                     statsd_metrics.append(convert_to_statsd_format(metric))
         return statsd_metrics
 
-    def get_rico_coda_metrics(self, metric_name, metric_attrs, hdr, partial_name_list):
-        """
-        partial_name_list is the list of names for the metric except the metric_name and metric_attr
-        NOTE: metric_name is not escaped - dots will have meaning
-        """
-        statsd_metrics = []
-        for (metric_attr, val) in metric_attrs.iteritems():
-            if metric_attr == "type" or metric_attr == "rateUnit":
-                continue
-            metric = {
-                "source": "samza",
-                "timestamp": hdr['time'],
-                "name_list": [format_name(n) for n in partial_name_list] + [metric_name, metric_attr],
-                "type": 'gauge',
-                "value": val
-            }
-            statsd_metrics.append(convert_to_statsd_format(metric, format_names=False))
-        return statsd_metrics
-
     def get_container_elasticsearch_native_metrics(self, samza_metrics):
         statsd_metrics = []
         if self.ES_NATIVE_PRODUCER_GRP_NAME in samza_metrics['metrics']:
@@ -190,6 +171,25 @@ class SamzaMetricsConverter(object):
         #samza.<job-name>.<job-id>.task.<task-name>.rico.<metric-name>.<metric-attr>
         partial_name_list = ['samza', hdr['job-name'], hdr['job-id'], 'task', hdr['source'], 'rico']
         return self.get_rico_coda_metrics(metric_name, metric_attrs, hdr, partial_name_list)
+
+    def get_rico_coda_metrics(self, metric_name, metric_attrs, hdr, partial_name_list):
+        """
+        partial_name_list is the list of names for the metric except the metric_name and metric_attr
+        NOTE: metric_name is not escaped - dots will have meaning
+        """
+        statsd_metrics = []
+        for (metric_attr, val) in metric_attrs.iteritems():
+            if metric_attr == "type" or metric_attr == "rateUnit":
+                continue
+            metric = {
+                "source": "samza",
+                "timestamp": hdr['time'],
+                "name_list": [format_name(n) for n in partial_name_list] + [metric_name, metric_attr],
+                "type": 'gauge',
+                "value": val
+            }
+            statsd_metrics.append(convert_to_statsd_format(metric, format_names=False))
+        return statsd_metrics
 
     def get_task_metrics(self, samza_metrics):
         stats = []
