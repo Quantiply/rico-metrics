@@ -14,8 +14,9 @@
 #  limitations under the License.
 #
 import re
+import java.lang.Exception as JException
 from statsd import TCPStatsClient, StatsClient
-import time 
+import time
 from datetime import datetime
 import traceback
 from com.quantiply.samza.task import BaseTask
@@ -25,7 +26,7 @@ from rico.metrics.statsd_util import convert_to_statsd_format
 
 class SamzaMetricsTask(BaseTask):
     converter = SamzaMetricsConverter()
-  
+
     def _init(self, config, context, metric_adaptor):
         self.output = self.getSystemStream("out")
         self.registerDefaultHandler(self.handle_msg)
@@ -38,17 +39,17 @@ class SamzaMetricsTask(BaseTask):
                 samza_metrics = envelope.message
             for metric in self.converter.get_statsd_metrics(samza_metrics):
                 collector.send(OutgoingMessageEnvelope(self.output, metric))
-        except Exception, e:
+        #rhoover - have to catch Java and Python exceptions separately :(
+        except (JException, Exception), e:
             self.logger.error(traceback.format_exc())
-            if self.logger.isDebugEnabled:
-                self.logger.debug("Message was: " + str(envelope))
+            if self.logger.isInfoEnabled:
+                self.logger.error("Error while processing message %s: %s" %(envelope, e))
             raise e
 
-        
 class DruidMetricsTask(BaseTask):
     DS_PREFIXES = ['events', 'rows', 'failed', 'persist', 'query']
     NODE_PREFIXES = ['exec', 'cache', 'jvm']
-    
+
     def _init(self, config, context, metric_adaptor):
         self.output = self.getSystemStream("out")
         self.registerDefaultHandler(self.handle_msg)
@@ -87,28 +88,30 @@ class DruidMetricsTask(BaseTask):
                       "value": msg["value"]
                   }
                   collector.send(OutgoingMessageEnvelope(self.output, convert_to_statsd_format(metric)))
-        except Exception, e:
-            if (self.logger.isInfoEnabled):
-                self.logger.info("Error while processing record" + str(data) + ": " + e.message)
+        #rhoover - have to catch Java and Python exceptions separately :(
+        except (JException, Exception), e:
+            self.logger.error(traceback.format_exc())
+            if self.logger.isInfoEnabled:
+                self.logger.error("Error while processing record %s: %s" %(data, e))
             raise e
 
 class StatsDTask(BaseTask):
     METRIC_GROUP_NAME = "statsd_push"
-    
+
     def _init(self, config, context, metric_adaptor):
         statsd_host = config.get("rico.statsd.host")
         statsd_port = config.get("rico.statsd.port")
         enable_tcp = config.get("rico.tcp.enable", "false").lower() == "true"
-        
+
         self.drop_secs = int(config.get("rico.drop.secs"))
         self.drop_old_msgs = True
         self.prefix = config.get("rico.statsd.prefix")
-        
+
         self.logger.info("Drop secs: %s" % self.drop_secs)
         self.logger.info("Using TCP: %s" % enable_tcp)
 
         self.client = TCPStatsClient(statsd_host, statsd_port) if enable_tcp else StatsClient(statsd_host, statsd_port)
-        
+
         self.registerDefaultHandler(self.handle_msg)
 
     def handle_msg(self, data, collector, coord):
@@ -131,10 +134,12 @@ class StatsDTask(BaseTask):
                 elif metric_type == "counter":
                     self.client.incr(name, msg["value"])
                 self.client.incr(self.get_own_stat_name(msg["source"], "messages_sent"), 1)
-        except Exception, e:
-            if (self.logger.isInfoEnabled):
-                self.logger.info("Error while processing record" + str(data) + ": " + e.message)
+        #rhoover - have to catch Java and Python exceptions separately :(
+        except (JException, Exception), e:
+            self.logger.error(traceback.format_exc())
+            if self.logger.isInfoEnabled:
+                self.logger.error("Error while processing record %s: %s" %(data, e))
             raise e
-            
+
     def get_own_stat_name(self, source, name):
         return "%s.%s.%s.%s" % (self.prefix, self.METRIC_GROUP_NAME, source, name)
