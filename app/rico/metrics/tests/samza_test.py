@@ -56,6 +56,34 @@ class SamzaMetricsConverterTest(unittest.TestCase):
         ]
         self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
 
+    def test_container_elasticsearch_http_producer_metrics_with_java_map(self):
+        import java.util.HashMap as JHashMap
+        jmap = JHashMap()
+        jmap.put('min', 8)
+        data = {
+            "header": {
+                "job-id": "1",
+                "samza-version": "0.9.0",
+                "job-name": "deploy-svc-repartition",
+                "host": "thedude",
+                "reset-time": 1433533612817,
+                "container-name": "samza-container-0",
+                "source": "samza-container-0",
+                "time": 1433547788717,
+                "version": "0.0.1"
+            },
+            "metrics": {
+                "com.quantiply.samza.system.elasticsearch.ElasticsearchSystemProducerMetrics": {
+                  "es-bulk-send-wait-ms": jmap
+                }
+            }
+        }
+        metrics = self.converter.get_statsd_metrics(data)
+        expected = [
+            {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.eshttp.producer.es_bulk_send_wait_ms.min', 'value': 8, 'source': 'samza'},
+        ]
+        self.assertEquals(expected, sorted(metrics, key=lambda m: m['name']))
+
     def test_container_elasticsearch_http_producer_metrics(self):
         data = {
             "header": {
@@ -135,7 +163,7 @@ class SamzaMetricsConverterTest(unittest.TestCase):
             }
         }
         metrics = self.converter.get_statsd_metrics(data)
-        print sorted(metrics, key=lambda m: m['name'])
+        # print sorted(metrics, key=lambda m: m['name'])
         expected = [
             {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.eshttp.producer.es_bulk_send_batch_size.75thPercentile', 'value': 20, 'source': 'samza'},
             {'timestamp': 1433547788717, 'type': 'gauge', 'name': 'samza.deploy_svc_repartition.1.container.samza_container_0.eshttp.producer.es_bulk_send_batch_size.95thPercentile', 'value': 20, 'source': 'samza'},
