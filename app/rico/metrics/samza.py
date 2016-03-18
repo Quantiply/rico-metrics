@@ -100,7 +100,7 @@ class SamzaMetricsConverter(object):
             hdr = samza_metrics['header']
             partial_name_list = ['samza', hdr['job-name'], hdr['job-id'], 'container', hdr['container-name'], 'eshttp', 'producer']
             for name in metrics.keys():
-                #rhoover - need to use duct typing to handle Java maps and Python dicts
+                #rhoover - need to use duck typing to handle Java maps and Python dicts
                 if hasattr(metrics[name], '__getitem__'):
                     #samza.<job-name>.<job-id>.container.<container-name>.eshttp.producer.<metric-name>.<metric_attr>
                     statsd_metrics += self.get_rico_coda_metrics(format_name(name), metrics[name], hdr, partial_name_list)
