@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2015 Quantiply Corporation. All rights reserved.
+# Copyright 2014-2016 Quantiply Corporation. All rights reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -39,12 +39,12 @@ class SamzaMetricsTask(BaseTask):
                 samza_metrics = envelope.message
             for metric in self.converter.get_statsd_metrics(samza_metrics):
                 collector.send(OutgoingMessageEnvelope(self.output, metric))
-        except Exception, e:
+        #rhoover - have to catch Java and Python exceptions separately :(
+        except (JException, Exception), e:
             self.logger.error(traceback.format_exc())
-            if self.logger.isDebugEnabled:
-                self.logger.debug("Message was: " + str(envelope))
+            if self.logger.isInfoEnabled:
+                self.logger.error("Error while processing message %s: %s" %(envelope, e))
             raise e
-
 
 class DruidMetricsTask(BaseTask):
     DS_PREFIXES = ['events', 'rows', 'failed', 'persist', 'query']
@@ -88,9 +88,11 @@ class DruidMetricsTask(BaseTask):
                       "value": msg["value"]
                   }
                   collector.send(OutgoingMessageEnvelope(self.output, convert_to_statsd_format(metric)))
-        except Exception, e:
-            if (self.logger.isInfoEnabled):
-                self.logger.info("Error while processing record" + str(data) + ": " + e.message)
+        #rhoover - have to catch Java and Python exceptions separately :(
+        except (JException, Exception), e:
+            self.logger.error(traceback.format_exc())
+            if self.logger.isInfoEnabled:
+                self.logger.error("Error while processing record %s: %s" %(data, e))
             raise e
 
 class StatsDTask(BaseTask):
@@ -134,6 +136,7 @@ class StatsDTask(BaseTask):
                 self.client.incr(self.get_own_stat_name(msg["source"], "messages_sent"), 1)
         #rhoover - have to catch Java and Python exceptions separately :(
         except (JException, Exception), e:
+            self.logger.error(traceback.format_exc())
             if self.logger.isInfoEnabled:
                 self.logger.error("Error while processing record %s: %s" %(data, e))
             raise e

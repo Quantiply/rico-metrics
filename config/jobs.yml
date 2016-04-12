@@ -10,7 +10,7 @@ samza-to-statsd:
       inputs: kafka.sys.samza_metrics
     metrics.reporters: jmx #not configuring stats for this job as it's a special case
     systems.kafka.streams.sys.samza_metrics.samza.msg.serde: json
-    
+
 druid-to-statsd:
   common:
     rico:
@@ -28,12 +28,12 @@ statsd-push:
       drop.on.error: true
       jython.entrypoint: rico.metrics.task.StatsDTask
       drop.secs: 999999999999
-      tcp.enable: true
+      tcp.enable: false
       statsd:
         prefix: test
         host: localhost
         port: 8125
-  
+
   samza:
     job.name: statsd-push
     job.id: 2
