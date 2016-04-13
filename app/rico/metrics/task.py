@@ -49,10 +49,26 @@ class SamzaMetricsTask(BaseTask):
 class DruidMetricsTask(BaseTask):
     DS_PREFIXES = ['ingest', 'events', 'rows', 'failed', 'persist', 'query']
     NODE_PREFIXES = ['query/cache', 'exec', 'cache', 'jvm']
+    JVM_CATEGORY_DIMENSIONS = {
+        'pool': [('kind', 'poolKind'), ('name', 'poolName')],
+        'bufferpool': [('name', 'bufferpoolName')],
+        'mem': [('kind', 'memKind')],
+        'gc': [('name', 'gcName')]
+    }
 
     def _init(self, config, context, metric_adaptor):
         self.output = self.getSystemStream("out")
         self.registerDefaultHandler(self.handle_msg)
+
+    def get_extra_node_dimensions(self, msg):
+        dims = []
+        if msg["metric"].startswith('jvm/') and 'user1' not in msg:
+            category = msg["metric"].split('/')[1]
+            if category in self.JVM_CATEGORY_DIMENSIONS:
+                for (name, key) in self.JVM_CATEGORY_DIMENSIONS[category]:
+                    dims.append(name)
+                    dims.append(msg[key])
+        return dims
 
     def handle_msg(self, data, collector, coord):
         try:
@@ -69,11 +85,12 @@ class DruidMetricsTask(BaseTask):
                 collector.send(OutgoingMessageEnvelope(self.output, convert_to_statsd_format(metric)))
             elif msg['feed'] == 'metrics':
                 if any([msg["metric"].startswith(prefix) for prefix in self.NODE_PREFIXES]):
-                    #druid.<node-type>.<node>.node.<metric>
+                    #druid.<node-type>.<node>.node.<extra dimensions>.<metric>
+                    xtra_dims = self.get_extra_node_dimensions(msg)
                     metric = {
                         "source": "druid",
                         "timestamp": datetime.strptime(msg["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ"),
-                        "name_list": ['druid', msg["service"], msg["host"], 'node'] + msg["metric"].split('/'),
+                        "name_list": ['druid', msg["service"], msg["host"], 'node'] + msg["metric"].split('/') + xtra_dims,
                         "type": 'counter',
                         "value": msg["value"]
                     }

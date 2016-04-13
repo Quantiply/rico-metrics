@@ -89,7 +89,7 @@ class DruidMetricsTaskTest(unittest.TestCase):
         expected = {'source': 'druid', 'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8089.datasource.wikipedia.events.processed', 'value': 0, 'timestamp': datetime(2015, 4, 22, 19, 31, 20, 896000)}
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
-    def test_persist(self):
+    def test_old_persist(self):
         self.call_handle_msg({"feed": "metrics", "user2": "wikipedia", "service": "middlemanager", "timestamp": "2015-04-22T19:31:20.896Z", "metric": "persists/num", "value": 0, "host": "fb-agg-mm-0.dev.quantezza.com:8089"})
 
         expected = {'source': 'druid', 'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8089.datasource.wikipedia.persists.num', 'value': 0, 'timestamp': datetime(2015, 4, 22, 19, 31, 20, 896000)}
@@ -119,6 +119,12 @@ class DruidMetricsTaskTest(unittest.TestCase):
         self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
 
     def test_jvm(self):
+        self.call_handle_msg({"feed": "metrics", "service": "druid/sit/middleManager", "poolName": "Compressed Class Space", "timestamp": "2016-04-12T21:52:49.214Z", "metric": "jvm/pool/used", "value": 5791160, "host": "a.foo.com:8083", "poolKind": "nonheap"})
+
+        expected = {'source': 'druid', 'type': 'counter', 'name': 'druid.druid_sit_middleManager.a_foo_com_8083.node.jvm.pool.used.kind.nonheap.name.Compressed_Class_Space', 'value': 5791160, 'timestamp': datetime(2016, 4, 12, 21, 52, 49, 214000)}
+        self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
+
+    def test_jvm_old(self):
         self.call_handle_msg({"feed": "metrics", "user2": "PS Perm Gen", "service": "middlemanager", "user1": "nonheap", "timestamp": "2015-04-22T19:31:17.878Z", "metric": "jvm/pool/committed", "value": 83886080, "host": "fb-agg-mm-0.dev.quantezza.com:8189"})
 
         expected = {'source': 'druid', 'type': 'counter', 'name': 'druid.middlemanager.fb_agg_mm_0_dev_quantezza_com_8189.node.jvm.pool.committed', 'value': 83886080, 'timestamp': datetime(2015, 4, 22, 19, 31, 17, 878000)}
