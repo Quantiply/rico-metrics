@@ -47,7 +47,7 @@ class SamzaMetricsTask(BaseTask):
             raise e
 
 class DruidMetricsTask(BaseTask):
-    DS_PREFIXES = ['ingest/events', 'events', 'rows', 'failed', 'persist', 'query']
+    DS_PREFIXES = ['ingest', 'events', 'rows', 'failed', 'persist', 'query']
     NODE_PREFIXES = ['query/cache', 'exec', 'cache', 'jvm']
 
     def _init(self, config, context, metric_adaptor):
