@@ -47,7 +47,7 @@ class SamzaMetricsTask(BaseTask):
             raise e
 
 class DruidMetricsTask(BaseTask):
-    DS_PREFIXES = ['events', 'rows', 'failed', 'persist', 'query']
+    DS_PREFIXES = ['ingest/events', 'events', 'rows', 'failed', 'persist', 'query']
     NODE_PREFIXES = ['query/cache', 'exec', 'cache', 'jvm']
 
     def _init(self, config, context, metric_adaptor):
@@ -80,10 +80,11 @@ class DruidMetricsTask(BaseTask):
                     collector.send(OutgoingMessageEnvelope(self.output, convert_to_statsd_format(metric)))
                 elif any([msg["metric"].startswith(prefix) for prefix in self.DS_PREFIXES]):
                     #druid.<node-type>.<node>.datasource.<datasource>.<metric>
+                    datasource = msg['dataSource'] if 'dataSource' in msg else msg['user2']
                     metric = {
                       "source": "druid",
                       "timestamp": datetime.strptime(msg["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ"),
-                      "name_list": ['druid', msg["service"], msg["host"], 'datasource', msg["user2"]] + msg["metric"].split('/'),
+                      "name_list": ['druid', msg["service"], msg["host"], 'datasource', datasource] + msg["metric"].split('/'),
                       "type": 'counter',
                       "value": msg["value"]
                     }

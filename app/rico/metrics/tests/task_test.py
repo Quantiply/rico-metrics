@@ -71,6 +71,12 @@ class DruidMetricsTaskTest(unittest.TestCase):
         self.mock_envelope.message = data
         self.task.handle_msg(self.mock_envelope, self.mock_collector, self.mock_coordinator)
 
+    def test_ingest(self):
+        self.call_handle_msg({"feed": "metrics", "service": "druid/sit/middleManager", "timestamp": "2016-04-12T21:52:06.301Z", "metric": "ingest/events/processed", "value": 20, "host": "a.foo.com:8103", "dataSource": "pageviews"})
+
+        expected = {'source': 'druid', 'type': 'counter', 'name': 'druid.druid_sit_middleManager.a_foo_com_8103.datasource.pageviews.ingest.events.processed', 'value': 20, 'timestamp': datetime(2016, 4, 12, 21, 52, 06, 301000)}
+        self.mock_collector.send.assert_called_once_with(OutgoingMessageEnvelope(self.task.output, expected))
+
     def test_old_events(self):
         self.call_handle_msg({"feed": "metrics", "user2": "wikipedia", "service": "middlemanager", "timestamp": "2015-04-22T19:31:20.896Z", "metric": "events/processed", "value": 0, "host": "fb-agg-mm-0.dev.quantezza.com:8089"})
 
