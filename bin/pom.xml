@@ -5,45 +5,37 @@
   <groupId>com.quantiply.rico</groupId>
   <artifactId>rico-metrics</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.2-SNAPSHOT</version>
+  <version>1.0.2</version>
   <modelVersion>4.0.0</modelVersion>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <avro.version>1.7.7</avro.version>
-    <rico.version>1.0.8</rico.version>
+    <rico.version>1.0.11</rico.version>
     <samza.version>0.9.1</samza.version>
     <kafka.version>0.8.2.1</kafka.version>
     <jackson.version>1.8.5</jackson.version>
   </properties>
 
   <distributionManagement>
-      <repository>
-          <id>aws-release</id>
-          <name>AWS Release Repository</name>
-          <url>s3://artifacts.quantezza.com/release</url>
-      </repository>
-      <snapshotRepository>
-          <id>aws-snapshot</id>
-          <name>AWS Snapshot Repository</name>
-          <url>s3://artifacts.quantezza.com/snapshot</url>
-      </snapshotRepository>
+    <repository>
+      <id>bintray-quantiply-quantiply</id>
+      <name>quantiply-quantiply</name>
+      <url>https://api.bintray.com/maven/quantiply/quantiply/rico</url>
+    </repository>
   </distributionManagement>
 
   <repositories>
-    <repository>
-      <id>aws-release</id>
-      <name>AWS S3 Release Repository</name>
-      <url>https://s3.amazonaws.com/artifacts.quantezza.com/release</url>
-    </repository>
-    <repository>
-      <id>aws-snapshot</id>
-      <name>AWS S3 Snapshot Repository</name>
-      <url>https://s3.amazonaws.com/artifacts.quantezza.com/snapshot</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
+      <repository>
+         <id>bintray</id>
+         <url>http://dl.bintray.com/quantiply/quantiply</url>
+         <releases>
+           <enabled>true</enabled>
+         </releases>
+         <snapshots>
+           <enabled>false</enabled>
+         </snapshots>
+       </repository>
   </repositories>
 
   <profiles>
