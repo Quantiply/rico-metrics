@@ -21,7 +21,7 @@
     <repository>
       <id>bintray-quantiply-quantiply</id>
       <name>quantiply-quantiply</name>
-      <url>https://api.bintray.com/maven/quantiply/quantiply/rico</url>
+      <url>https://api.bintray.com/maven/quantiply/quantiply/rico-metrics</url>
     </repository>
   </distributionManagement>
 
