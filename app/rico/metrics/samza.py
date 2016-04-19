@@ -23,6 +23,7 @@ class SamzaMetricsConverter(object):
     JVM_GRP_NAME = 'org.apache.samza.metrics.JvmMetrics'
     ES_NATIVE_PRODUCER_GRP_NAME = 'org.apache.samza.system.elasticsearch.ElasticsearchSystemProducerMetrics'
     ES_HTTP_PRODUCER_GRP_NAME = 'com.quantiply.samza.system.elasticsearch.ElasticsearchSystemProducerMetrics'
+    TRANQUILITY_PRODUCER_GRP_NAME = 'com.quantiply.samza.system.druid.TranquilitySystemProducerMetrics'
     KV_GRP_NAMES = {
       'org.apache.samza.storage.kv.KeyValueStoreMetrics': 'store',
       'org.apache.samza.storage.kv.CachedStoreMetrics': 'cached-store',
@@ -91,7 +92,31 @@ class SamzaMetricsConverter(object):
         stats = []
         stats += self.get_container_elasticsearch_native_metrics(samza_metrics)
         stats += self.get_container_elasticsearch_http_metrics(samza_metrics)
+        stats += self.get_container_tranquility_http_metrics(samza_metrics)
         return stats
+
+    def get_container_tranquility_http_metrics(self, samza_metrics):
+        statsd_metrics = []
+        if self.TRANQUILITY_PRODUCER_GRP_NAME in samza_metrics['metrics']:
+            metrics = samza_metrics['metrics'][self.TRANQUILITY_PRODUCER_GRP_NAME]
+            hdr = samza_metrics['header']
+            partial_name_list = ['samza', hdr['job-name'], hdr['job-id'], 'container', hdr['container-name'], 'tranquility', 'producer']
+            for name in metrics.keys():
+                #rhoover - need to use duck typing to handle Java maps and Python dicts
+                if hasattr(metrics[name], '__getitem__'):
+                    #samza.<job-name>.<job-id>.container.<container-name>.tranquility.producer.<metric-name>.<metric_attr>
+                    statsd_metrics += self.get_rico_coda_metrics(format_name(name), metrics[name], hdr, partial_name_list)
+                else:
+                    #samza.<job-name>.<job-id>.container.<container-name>.tranquility.producer.<metric>
+                    metric = {
+                        "source": "samza",
+                        "timestamp": hdr['time'],
+                        "name_list": partial_name_list + [name],
+                        "type": 'gauge',
+                        "value": metrics[name]
+                    }
+                    statsd_metrics.append(convert_to_statsd_format(metric))
+        return statsd_metrics
 
     def get_container_elasticsearch_http_metrics(self, samza_metrics):
         statsd_metrics = []
